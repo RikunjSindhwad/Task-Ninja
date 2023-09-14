@@ -86,10 +86,10 @@ TaskNinja is open-source and released under the [MIT License](LICENSE).
 
 ## Contact
 
-If you have any questions, feedback, or need assistance, feel free to me on [linkedin](https://www.linkedin.com/in/rikunj/) or [telegram](https://t.me/R0B077)https://t.me/R0B077 
+If you have any questions, feedback, or need assistance, feel free to me on [linkedin](https://www.linkedin.com/in/rikunj/) or [telegram](https://t.me/R0B077)
 
 ## Join Robensive Community
 Robensive community helps you to get regular updates on news/jobs/tools/courses and knowledge sharing
-Join over [telegram](https://t.me/robensive)https://t.me/robensive
+Join over [telegram](https://t.me/robensive)
 
 
