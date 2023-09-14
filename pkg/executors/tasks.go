@@ -1,14 +1,15 @@
 package executors
 
 import (
-	"Robensive-TaskNinja/pkg/config"
-	"Robensive-TaskNinja/pkg/utils"
 	"context"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
 
 	"github.com/projectdiscovery/gologger"
 )

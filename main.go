@@ -1,10 +1,10 @@
 package main
 
 import (
-	"Robensive-TaskNinja/pkg/config"
-	"Robensive-TaskNinja/pkg/executors"
-	"Robensive-TaskNinja/pkg/utils"
-	"Robensive-TaskNinja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/executors"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/formatter"

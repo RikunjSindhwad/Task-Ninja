@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"Robensive-TaskNinja/pkg/config"
-	"Robensive-TaskNinja/pkg/visuals"
 	"strings"
+
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"

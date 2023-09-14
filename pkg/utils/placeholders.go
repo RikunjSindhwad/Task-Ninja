@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"Robensive-TaskNinja/pkg/config"
 	"fmt"
 	"strings"
+
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 )
 
 func ReplacePlaceholders(config *config.Config) {

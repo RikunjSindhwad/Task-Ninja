@@ -1,8 +1,9 @@
 package executors
 
 import (
-	"Robensive-TaskNinja/pkg/config"
 	"fmt"
+
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 )
 
 func GetRequiredValues(config *config.Config) (map[string]interface{}, error) {

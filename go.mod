@@ -1,4 +1,4 @@
-module Robensive-TaskNinja
+module github.com/RikunjSindhwad/Task-Ninja
 
 go 1.19
 
