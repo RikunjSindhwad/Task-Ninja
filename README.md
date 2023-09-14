@@ -66,6 +66,12 @@ TaskNinja is inspired by the amazing work of the [trickest.io](https://trickest.
 
 TaskNinja is easy to install using the following commands:
 
+[-] Go Install
+```
+GO111MODULE=on
+go install github.com/RikunjSindhwad/Task-Ninja@latest
+```
+[-] Build
 ```bash
 # Clone the repository
 git clone https://github.com/RikunjSindhwad/Task-Ninja.git
