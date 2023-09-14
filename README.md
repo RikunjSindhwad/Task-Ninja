@@ -1,5 +1,8 @@
 # TaskNinja
 
+TaskNinja is a versatile and extensible task automation framework designed to simplify and streamline your workflow. Whether you're managing complex tasks, automating routine operations, or orchestrating a series of commands, TaskNinja is here to make your life easier.
+
+
 ```
                                                                             
                                                               .:--                        
@@ -34,9 +37,10 @@
 (-|     (-/_| (-(__  ( |_/    (-|\ | (-|   (-|\ |  (-|   (-/_| 
  _|,    _/  |, ____)  _| \,    _| \|, _|_,  _| \|, __|,  _/  |,
 (      (      (      (        (      (     (      (     (      
+         Made For 🥷  by Robensive                               Version=1.0
+================================================================================
 ```
 
-TaskNinja is a versatile and extensible task automation framework designed to simplify and streamline your workflow. Whether you're managing complex tasks, automating routine operations, or orchestrating a series of commands, TaskNinja is here to make your life easier.
 
 ## Features
 
