@@ -62,6 +62,54 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 
 TaskNinja is inspired by the amazing work of the [trickest.io](https://trickest.io) platform and the [Raydar](https://github.com/devanshbatham/rayder) tool. We extend our gratitude to their contributions to the task automation and cybersecurity community.
 
+## Sample - Static 
+```bash
+ root@robensive> Task-Ninja -w zap_scanner.yaml -noBanner -v url_list=urls.txt
+[Workflow-Credit] Tasked Workflow 'ZAP Scanner' Workflow-Author=Rikunj Sindhwad
+------------------------------------------------------------------------------------------------------------------------
+[Start] [2023-09-14T17:45:45Z] Task Started TaskName=Create Required Directories
+------------------------------------------------------------------------------------------------------------------------
+[Task-Info] Task is Static TaskName=Create Required Directories
+[Static-Task: Create Required Directories] [2023-09-14T17:45:45Z] Executing Task
+------------------------------------------------------------------------------------------------------------------------
+[Success] [2023-09-14T17:45:45Z] Task Finished TaskName=Create Required Directories
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+[Start] [2023-09-14T17:45:46Z] Task Started TaskName=Downnload zap yaml
+------------------------------------------------------------------------------------------------------------------------
+[Task-Info] Task is Static TaskName=Downnload zap yaml
+[Static-Task: Downnload zap yaml] [2023-09-14T17:45:46Z] Executing Task
+------------------------------------------------------------------------------------------------------------------------
+[Success] [2023-09-14T17:45:46Z] Task Finished TaskName=Downnload zap yaml
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+[Start] [2023-09-14T17:45:47Z] Task Started TaskName=Modify ZAP config
+------------------------------------------------------------------------------------------------------------------------
+[Task-Info] Task is Static TaskName=Modify ZAP config
+[Static-Task: Modify ZAP config] [2023-09-14T17:45:47Z] Executing Task
+------------------------------------------------------------------------------------------------------------------------
+[Success] [2023-09-14T17:45:52Z] Task Finished TaskName=Modify ZAP config
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+[Start] [2023-09-14T17:45:53Z] Task Started TaskName=run ZAP
+------------------------------------------------------------------------------------------------------------------------
+[Task-Info] Task is Static TaskName=run ZAP
+[Static-Task: run ZAP] [2023-09-14T17:45:53Z] Executing Task
+------------------------------------------------------------------------------------------------------------------------
+[Success] [2023-09-14T17:46:09Z] Task Finished TaskName=run ZAP
+------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+[Start] [2023-09-14T17:46:10Z] Task Started TaskName=Result-Check
+------------------------------------------------------------------------------------------------------------------------
+[Task-Info] Task is Static TaskName=Result-Check
+[Static-Task: Result-Check] [2023-09-14T17:46:10Z] Executing Task
+result saved in hive/out/ZAP-Result.CSV
+------------------------------------------------------------------------------------------------------------------------
+[Success] [2023-09-14T17:46:10Z] Task Finished TaskName=Result-Check
+------------------------------------------------------------------------------------------------------------------------
+[Workflow-Complete] Workflow 'ZAP Scanner' Execution Complete Workflow-Author=Rikunj Sindhwad
+```
+
 ### Installation
 
 TaskNinja is easy to install using the following commands:
