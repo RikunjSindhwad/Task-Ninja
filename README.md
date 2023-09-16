@@ -44,18 +44,17 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 
 ## Features
 
-- **Task Automation**: Define and automate tasks, creating a seamless workflow for your projects.
+- :robot: **Task Automation**: Define and automate tasks, creating a seamless workflow for your projects.
 
-- **Parallel Execution**: Execute tasks in parallel to save time and improve efficiency.
+- :rocket: **Parallel Execution**: Execute tasks in parallel to save time and improve efficiency.
 
-- **Dependency Management**: Specify task dependencies to ensure that tasks are executed in the correct order.
+- :link: **Dependency Management**: Specify task dependencies to ensure that tasks are executed in the correct order.
 
-- **Customization**: Tailor TaskNinja to your specific needs by defining custom tasks and workflows.
+- :wrench: **Customization**: Tailor TaskNinja to your specific needs by defining custom tasks and workflows.
   
-- **Logging**: TaskNinja provides comprehensive logging capabilities to help you monitor and troubleshoot your automation processes.
+- :scroll: **Logging**: TaskNinja provides comprehensive logging capabilities to help you monitor and troubleshoot your automation processes.
   
-- **Extensibility**: Easily add new functionalities and plugins to TaskNinja for enhanced capabilities.
-
+- :jigsaw: **Extensibility**: Easily add new functionalities and plugins to TaskNinja for enhanced capabilities.
 
 
 ## Acknowledgments
@@ -64,72 +63,76 @@ TaskNinja is inspired by the amazing work of the [trickest.io](https://trickest.
 
 ## Sample - Static 
 ```bash
- root@robensive> Task-Ninja -w zap_scanner.yaml -noBanner -v url_list=urls.txt
+ root@robensive>  Task-Ninja -w zap_scanner.yaml -nb -v url_list=urls.txt
+================================================================================
 [Workflow-Credit] Tasked Workflow 'ZAP Scanner' Workflow-Author=Rikunj Sindhwad
+================================================================================
 ------------------------------------------------------------------------------------------------------------------------
-[Start] [2023-09-14T17:45:45Z] Task Started TaskName=Create Required Directories
+[START] [2023-09-16T09:12:36Z] Task Started TaskName=Create Required Directories
 ------------------------------------------------------------------------------------------------------------------------
 [Task-Info] Task is Static TaskName=Create Required Directories
-[Static-Task: Create Required Directories] [2023-09-14T17:45:45Z] Executing Task
+[Static-Task: Create Required Directories] [2023-09-16T09:12:36Z] Executing Task
 ------------------------------------------------------------------------------------------------------------------------
-[Success] [2023-09-14T17:45:45Z] Task Finished TaskName=Create Required Directories
+[SUCCESS] [2023-09-16T09:12:36Z] Task Finished TaskName=Create Required Directories
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-[Start] [2023-09-14T17:45:46Z] Task Started TaskName=Downnload zap yaml
+[START] [2023-09-16T09:12:37Z] Task Started TaskName=Downnload zap yaml
 ------------------------------------------------------------------------------------------------------------------------
 [Task-Info] Task is Static TaskName=Downnload zap yaml
-[Static-Task: Downnload zap yaml] [2023-09-14T17:45:46Z] Executing Task
+[Static-Task: Downnload zap yaml] [2023-09-16T09:12:37Z] Executing Task
 ------------------------------------------------------------------------------------------------------------------------
-[Success] [2023-09-14T17:45:46Z] Task Finished TaskName=Downnload zap yaml
+[SUCCESS] [2023-09-16T09:12:38Z] Task Finished TaskName=Downnload zap yaml
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-[Start] [2023-09-14T17:45:47Z] Task Started TaskName=Modify ZAP config
+[START] [2023-09-16T09:12:39Z] Task Started TaskName=Modify ZAP config
 ------------------------------------------------------------------------------------------------------------------------
 [Task-Info] Task is Static TaskName=Modify ZAP config
-[Static-Task: Modify ZAP config] [2023-09-14T17:45:47Z] Executing Task
+[Static-Task: Modify ZAP config] [2023-09-16T09:12:39Z] Executing Task
 ------------------------------------------------------------------------------------------------------------------------
-[Success] [2023-09-14T17:45:52Z] Task Finished TaskName=Modify ZAP config
+[SUCCESS] [2023-09-16T09:12:39Z] Task Finished TaskName=Modify ZAP config
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-[Start] [2023-09-14T17:45:53Z] Task Started TaskName=run ZAP
+[START] [2023-09-16T09:12:40Z] Task Started TaskName=run ZAP
 ------------------------------------------------------------------------------------------------------------------------
 [Task-Info] Task is Static TaskName=run ZAP
-[Static-Task: run ZAP] [2023-09-14T17:45:53Z] Executing Task
+[Static-Task: run ZAP] [2023-09-16T09:12:40Z] Executing Task
 ------------------------------------------------------------------------------------------------------------------------
-[Success] [2023-09-14T17:46:09Z] Task Finished TaskName=run ZAP
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[Start] [2023-09-14T17:46:10Z] Task Started TaskName=Result-Check
+[START] [2023-09-16T09:14:20Z] Task Started TaskName=Result-Check
 ------------------------------------------------------------------------------------------------------------------------
 [Task-Info] Task is Static TaskName=Result-Check
-[Static-Task: Result-Check] [2023-09-14T17:46:10Z] Executing Task
+[Static-Task: Result-Check] [2023-09-16T09:14:20Z] Executing Task
+"Cross Site Scripting (Reflected)","High (Medium)","https://ginandjuice.shop/catalog/filter?category=Accessories%0A%0D%0A%0D%3CscrIpt%3Ealert%281%29%3B%3C%2FscRipt%3E","category","GET","<scrIpt>alert(1);</scRipt>"
+"Cross Site Scripting (Reflected)","High (Medium)","https://ginandjuice.shop/login","username","POST","';alert(1);'"
+"Vulnerable JS Library","Medium (Medium)","https://ginandjuice.shop/resources/js/angular_1-7-7.js","","GET","/*
+ AngularJS v1.7.7"
 result saved in hive/out/ZAP-Result.CSV
 ------------------------------------------------------------------------------------------------------------------------
-[Success] [2023-09-14T17:46:10Z] Task Finished TaskName=Result-Check
+[SUCCESS] [2023-09-16T09:14:20Z] Task Finished TaskName=Result-Check
 ------------------------------------------------------------------------------------------------------------------------
 [Workflow-Complete] Workflow 'ZAP Scanner' Execution Complete Workflow-Author=Rikunj Sindhwad
+================================================================================
 ```
 
 ### Installation
 
 TaskNinja is easy to install using the following commands:
 
-[-] Go Install
-```
-GO111MODULE=on
-go install github.com/RikunjSindhwad/Task-Ninja@latest
-```
-[-] Build
-```bash
-# Clone the repository
-git clone https://github.com/RikunjSindhwad/Task-Ninja.git
-
-# Navigate to the TaskNinja directory
-cd Task-Ninja
-
-# Build TaskNinja
-go build
-```
+- [ ] **Go Install**
+  ```bash
+  GO111MODULE=on
+  go install github.com/RikunjSindhwad/Task-Ninja@latest
+  ```
+- [ ] Build
+  ```bash
+  # Clone the repository
+  git clone https://github.com/RikunjSindhwad/Task-Ninja.git
+  
+  # Navigate to the TaskNinja directory
+  cd Task-Ninja
+  
+  # Build TaskNinja
+  go build
+  ```
 ## Getting Started
 
 To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki/Getting-Started) in our Wiki. It provides step-by-step instructions on installation and usage.
