@@ -2,8 +2,31 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"strings"
 )
+
+func DetermineOutputPaths(stdoutDir, stderrDir, taskName string) (string, string) {
+	stdoutFile := ""
+	stderrFile := ""
+	if stdoutDir != "" || stderrDir != "" {
+		stdoutFile = stdoutDir + "/" + strings.ReplaceAll(taskName, " ", "-") + ".stdout"
+		stderrFile = stderrDir + "/" + strings.ReplaceAll(taskName, " ", "-") + ".stderr"
+	}
+	return stdoutFile, stderrFile
+}
+
+func GetOutputFileNames(taskName, stdoutDir, stderrDir string) (string, string) {
+	stdoutFile := ""
+	stderrFile := ""
+	if stdoutDir != "" || stderrDir != "" {
+		formatName := strings.ReplaceAll(taskName, " ", "-")
+		stdoutFile = fmt.Sprintf("%s/%s.stdout", stdoutDir, formatName)
+		stderrFile = fmt.Sprintf("%s/%s.stderr", stderrDir, formatName)
+	}
+	return stdoutFile, stderrFile
+}
 
 func ReadLinesFromFile(filePath string) ([]string, error) {
 	// Check if the file exists

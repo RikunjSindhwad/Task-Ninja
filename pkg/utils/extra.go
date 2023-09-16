@@ -35,3 +35,13 @@ func GetTimeout(taskData interface{}) time.Duration {
 	seconds := taskData.(map[string]interface{})["timeout"].(int)
 	return time.Duration(seconds) * time.Second
 }
+
+func AllDependenciesSatisfied(taskData interface{}, taskStatus map[string]bool) bool {
+	requiredTasks := GetInterfaceVal(taskData, "required").([]string)
+	for _, requiredTask := range requiredTasks {
+		if !taskStatus[requiredTask] {
+			return false
+		}
+	}
+	return true
+}

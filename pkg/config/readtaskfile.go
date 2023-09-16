@@ -1,8 +1,6 @@
 package config
 
 import (
-	// ... (other imports)
-
 	"os"
 
 	"gopkg.in/yaml.v2"
@@ -18,7 +16,6 @@ func ReadYamlFromFile(filePath string) (*Config, error) {
 
 	err = yaml.Unmarshal(yamlContent, &configStruct)
 	if err != nil {
-		// gologger.Fatal().Msgf("Error unmarshaling YAML: %v", err)
 		return nil, err
 	}
 

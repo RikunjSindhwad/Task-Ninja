@@ -3,15 +3,13 @@ package executors
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
-
-	"github.com/projectdiscovery/gologger"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 )
 
 func executeCMD(taskName string, command string, stdoutDir string, stderrDir string, shell string, timeout time.Duration, displayStdout bool) error {
@@ -24,9 +22,7 @@ func executeCMD(taskName string, command string, stdoutDir string, stderrDir str
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// // Create a command and set its attributes
-	// stdoutFile = stdoutFile + "/" + strings.ReplaceAll(stdoutFile, " ", "-") + ".stdout"
-	// stderrFile = stdoutFile + "/" + strings.ReplaceAll(stdoutFile, " ", "-") + ".stderr"
+	// Create a command and set its attributes
 	stdoutFile := ""
 	stderrFile := ""
 	if stdoutDir != "" || stderrDir != "" {
@@ -60,12 +56,8 @@ func executeCMD(taskName string, command string, stdoutDir string, stderrDir str
 	case err := <-done:
 		// Command has finished
 		if err != nil {
-			// If displayStdout is true, return the error
-			if displayStdout {
-				return fmt.Errorf("error executing command for task '%s': %v", taskName, err)
-			}
-			// Otherwise, return nil to indicate successful execution with no error
-			return nil
+			// Return the error
+			return fmt.Errorf("error executing command for task '%s': %v", taskName, err)
 		}
 	}
 
@@ -74,59 +66,46 @@ func executeCMD(taskName string, command string, stdoutDir string, stderrDir str
 }
 
 func ExecHelper(config *config.Config) {
-	requiredValues, err := GetRequiredValues(config)
-	if err != nil {
-		gologger.Fatal().TimeStamp().Msgf("Error %v", err)
-		return
-	}
-
-	// Create a map to track the execution status of tasks
-	taskStatus := make(map[string]bool)
-	for taskName := range requiredValues {
-		taskStatus[taskName] = false
-	}
-
+	// Tasks are false by default
+	taskStatus, whitelist := getTaskStatusandWhitelist(config)
 	// Create a wait group for parallel tasks
 	var wg sync.WaitGroup
 
 	// Function to execute a task
 	executeTaskFunc := func(taskName string, taskData interface{}) {
-		fmt.Fprintln(os.Stderr, strings.Repeat("-", 120))
-		gologger.Warning().Label("Start").TimeStamp().Str("TaskName", taskName).Msg("Task Started")
-		fmt.Fprintln(os.Stderr, strings.Repeat("-", 120))
+		visuals.PrintState("START", taskName, "")
 		err := executeTask(config, taskName, taskData)
 		if err == nil {
-			fmt.Fprintln(os.Stderr, strings.Repeat("-", 120))
-			gologger.Warning().Label("Success").TimeStamp().Str("TaskName", taskName).Msg("Task Finished")
-			fmt.Fprintln(os.Stderr, strings.Repeat("-", 120))
+			visuals.PrintState("SUCCESS", taskName, "")
+			taskStatus[taskName] = true
 		}
-		// Mark the task as executed
-		taskStatus[taskName] = true
 	}
 
 	// Execute tasks in parallel
-	for taskName, taskData := range requiredValues {
-		if len((taskData.(map[string]interface{})["required"]).([]string)) != 0 {
-			// parallel  false
-			taskData.(map[string]interface{})["parallel"] = false
-		}
-		if utils.GetInterfaceVal(taskData, "parallel").(bool) {
+	for _, taskData := range config.Tasks {
+		checkRequirements(&taskData, whitelist)
 
+		// **Change:** Wait for required tasks to finish before executing the current task
+		for _, requiredTask := range taskData.Required {
+			for !taskStatus[requiredTask] {
+				// Wait for 1 second before checking again
+				time.Sleep(time.Second)
+			}
+		}
+
+		if taskData.Parallel {
 			// Execute parallel tasks without waiting
 			wg.Add(1)
 			go func(name string, data interface{}) {
 				executeTaskFunc(name, data)
 				wg.Done()
-			}(taskName, taskData)
+			}(taskData.Name, GetTaskDataWithName(taskData.Name, config))
 		} else {
 			// Function to execute tasks with dependencies
 			executeWithDependencies := func() {
-				taskData := requiredValues[taskName]
-				requiredTasks := utils.GetInterfaceVal(taskData, "required").([]string)
-
 				// Check if all required tasks are completed
 				allRequirementsMet := true
-				for _, requiredTask := range requiredTasks {
+				for _, requiredTask := range taskData.Required {
 					if !taskStatus[requiredTask] {
 						allRequirementsMet = false
 						break
@@ -135,7 +114,7 @@ func ExecHelper(config *config.Config) {
 
 				// Execute the current task if all requirements are met
 				if allRequirementsMet {
-					executeTaskFunc(taskName, taskData)
+					executeTaskFunc(taskData.Name, GetTaskDataWithName(taskData.Name, config))
 				}
 			}
 
@@ -152,15 +131,22 @@ func ExecHelper(config *config.Config) {
 }
 
 func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent bool, stop bool) error {
-	gologger.Info().Label("Task-Info").Str("TaskName", taskName).Msg("Task is Static")
-	gologger.Debug().Label("Static-Task: " + taskName).TimeStamp().Msg("Executing Task")
+	visuals.PrintState("Task-Info", taskName, "Task is Static")
+	visuals.PrintState("Static-Task: "+taskName, taskName, "Executing Task")
 	err := executeCMD(taskName, strings.Join(commands, " && "), wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent)
 	if err != nil {
+		if strings.Contains(err.Error(), "timeout") {
+			visuals.PrintState("TIMEOUT", taskName, "")
+		} else {
+			visuals.PrintState("ERROR", taskName, "")
+		}
 		if stop {
-			gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Error executing task:")
+
+			// gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!")
+			visuals.PrintState("FETAL", taskName, "")
 			return err
 		}
-		gologger.Error().TimeStamp().Str("TaskName", taskName).Msgf("Error executing task:")
+		return err
 	}
 	return nil
 }
@@ -176,8 +162,14 @@ func executeTask(config *config.Config, taskName string, taskData interface{}) e
 	taskType := utils.GetInterfaceVal(taskData, "type").(string)
 	if strings.ToLower(taskType) == "dynamic" {
 		err := executeDynamicTask(taskName, commands, wfc, timeout, silent, stop, taskData)
-		return err
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 	err := executeSingleTask(taskName, commands, wfc, timeout, silent, stop)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }

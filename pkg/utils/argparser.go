@@ -17,7 +17,6 @@ type Args struct {
 	NoBanner bool
 }
 
-// ParseArgs parses the command-line arguments and returns an Args struct
 func ParseArgs() *Args {
 	options := &Args{}
 	flagSet := goflags.NewFlagSet()
@@ -37,7 +36,6 @@ func ParseArgs() *Args {
 }
 
 func UpdateConfigStruct(configStruct *config.Config, keyValueList []string) error {
-	// Split the list into individual key-value pairs
 
 	for _, pair := range keyValueList {
 		// Split the pair into key and value
@@ -55,7 +53,9 @@ func UpdateConfigStruct(configStruct *config.Config, keyValueList []string) erro
 	}
 	isempty, emptyVar := checkEmptyVars(configStruct)
 	if !isempty {
-		gologger.Fatal().Msgf("Variables %s is empty.\n\t%s", strings.Join(emptyVar, ","), configStruct.WorkflowConfig.Usage)
+		// visuals.PrintState("FETAL")
+		gologger.Error().Label("ERROR").Str("Variables", strings.Join(emptyVar, ",")).Msg("Missing Variable Value")
+		gologger.Fatal().Label("USAGE").Msg(configStruct.WorkflowConfig.Usage)
 	}
 
 	return nil

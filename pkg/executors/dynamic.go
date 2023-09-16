@@ -8,8 +8,7 @@ import (
 
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
-
-	"github.com/projectdiscovery/gologger"
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 )
 
 func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}) error {
@@ -25,35 +24,31 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 	}
 
 	if (dynamicFile == "" && dynamicRange == "") || (dynamicFile != "" && dynamicRange != "") {
-		gologger.Error().Label("ERROR").Str("TaskName", taskName).Msg("Either 'dynamicFile' or 'dynamicRange' must be specified, but not both.")
+		visuals.PrintState("ERROR", taskName, "Either 'dynamicFile' or 'dynamicRange' must be specified, but not both.")
 		if stop {
-			gologger.Fatal().Label("STOP").Str("TaskName", taskName).Msg("Stop On Error!")
+			visuals.PrintState("FETAL", taskName, "")
 		}
 		return nil
 	}
-
-	gologger.Info().Label("Task-Info: " + taskName).Msg("Task is Dynamic")
+	visuals.PrintState("Task-Info", taskName, "Task is Dynamic")
 	if maxThreads > 1 {
-		gologger.Info().Label("Task-Info: "+taskName).Str("Threads", strconv.Itoa(maxThreads)).Msgf("Running Tasks Parallel")
+		visuals.PrintStateDynamic("Task-Info", taskName, "Running Tasks Parallel", "Threads", strconv.Itoa(maxThreads))
 	}
 	mergedcmd := strings.Join(commands, " && ")
 
-	// Create a wait group to wait for all dynamic tasks to finish
 	var wg sync.WaitGroup
 
-	// Create a channel to signal task completion
 	taskDone := make(chan struct{}, 2) // Two tasks: dynamic file and dynamic range
 
-	// Execute dynamic file task concurrently
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		if dynamicFile != "" {
 			lines, err := utils.ReadLinesFromFile(dynamicFile)
 			if err != nil {
-				gologger.Error().Label("ERROR").Str("TaskName", taskName).Msgf("Error Reading Lines from File: %v", err)
+				visuals.PrintState("ERROR", taskName, "Error Reading Lines from File: "+err.Error())
 				if stop {
-					gologger.Fatal().Label("STOP").Str("TaskName", taskName).Msg("Stop On Error!")
+					visuals.PrintState("FETAL", taskName, "")
 				}
 				taskDone <- struct{}{}
 				return
@@ -84,13 +79,15 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 			counter := utils.GenerateIntegerList(ranges[0], ranges[1])
 			if len(counter) < maxThreads {
 				maxThreads = len(counter)
-				gologger.Info().Label("Task-Info: "+taskName).Str("Threads", strconv.Itoa(maxThreads)).Msgf("Threads > Range, Reducing...")
+				visuals.PrintStateDynamic("Task-Info", taskName, "Threads > Range, Reducing...", "Threads", strconv.Itoa(maxThreads))
 
 			}
 			if err != nil {
-				gologger.Error().Label("ERROR").Str("TaskName", taskName).Msgf("Invelid Range Format %s (expected: 1,5)", dynamicRange)
+				visuals.PrintState("ERROR", taskName, "Invalid Range Format "+dynamicRange+" (expected: 1,5)")
+
 				if stop {
-					gologger.Fatal().Label("STOP").Str("TaskName", taskName).Msg("Stop On Error!")
+					visuals.PrintState("FETAL", taskName, "")
+
 				}
 				taskDone <- struct{}{}
 				return
@@ -126,17 +123,17 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dynamicFile string, lines []string, wg *sync.WaitGroup, taskDone chan<- struct{}) {
 	defer wg.Done()
 	for _, line := range lines {
-		gologger.Debug().Label("Dynamic-Task: "+taskName).TimeStamp().Str("Value", line).Msg("Executing Task with FILE")
+		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "FileLine", line)
 		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicFile}}", line)
 		newtaskName := taskName + "-" + line
 		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
 			if strings.Contains(err.Error(), "timeout") {
-				gologger.Error().Label("TIMEOUT").Str("TaskName", taskName).Msgf("Error Executing Task: %v", err)
+				visuals.PrintState("TIMEOUT", taskName, "")
 			} else {
-				gologger.Error().Label("ERROR").Str("TaskName", taskName).Msgf("Error Executing Task: %v", err)
+				visuals.PrintState("ERROR", taskName, "")
 			}
 			if stop {
-				gologger.Fatal().Label("STOP").Str("TaskName", taskName).Msg("Stop On Error!")
+				visuals.PrintState("FETAL", taskName, "")
 			}
 		}
 	}
@@ -146,17 +143,17 @@ func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeo
 func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}) {
 	defer wg.Done()
 	for i := startIdx; i <= endIdx; i++ {
-		gologger.Debug().Label("Dynamic-Task: "+taskName).TimeStamp().Str("Value", strconv.Itoa(i)).Msg("Executing Task with range")
+		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "Value", strconv.Itoa(i))
 		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicRange}}", strconv.Itoa(i))
 		newtaskName := taskName + "-" + strconv.Itoa(i)
 		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
 			if strings.Contains(err.Error(), "timeout") {
-				gologger.Error().Label("TIMEOUT").Str("TaskName", taskName).Msgf("Error Executing Task: %v", err)
+				visuals.PrintState("TIMEOUT", newtaskName, "")
 			} else {
-				gologger.Error().Label("ERROR").Str("TaskName", taskName).Msgf("Error Executing Task: %v", err)
+				visuals.PrintState("ERROR", newtaskName, "")
 			}
 			if stop {
-				gologger.Fatal().Label("STOP").Str("TaskName", taskName).Msg("Stop On Error!")
+				visuals.PrintState("FETAL", newtaskName, "")
 			}
 		}
 	}

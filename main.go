@@ -5,45 +5,33 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/executors"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
-
-	"github.com/projectdiscovery/gologger"
-	"github.com/projectdiscovery/gologger/formatter"
-	"github.com/projectdiscovery/gologger/levels"
 )
 
 func main() {
-	gologger.DefaultLogger.SetMaxLevel(levels.LevelDebug)
+	visuals.SetLevelDebug()
 	args := utils.ParseArgs()
 	if !args.NoBanner {
 		visuals.PrintBanner()
 	}
 
 	if args.Json {
-		gologger.DefaultLogger.SetFormatter(&formatter.JSON{})
+		visuals.JsonView()
 	}
 
 	yamlFilePath := args.Workflow
 
 	configStruct, err := config.ReadYamlFromFile(yamlFilePath)
 	if err != nil {
-		gologger.Fatal().Label("ERROR").Msgf("Error Reading YAML: %v", err)
-
+		visuals.PrintState("FATAL", "Workflow-Error", "Error Reading YAML")
 	}
 
 	if configStruct.WorkflowConfig.Author != "" {
-		// Format string in advance to add author name in string
-		gologger.Info().Label("Workflow-Credit").Str("Workflow-Author", configStruct.WorkflowConfig.Author).Msgf("Tasked Workflow '%s'", configStruct.WorkflowConfig.Name)
+		visuals.PrintCredit(configStruct.WorkflowConfig.Author, configStruct.WorkflowConfig.Name, "start")
 	}
-	// Replace Placeholders {{#}}
+
 	variables := args.YamlVars
 	utils.UpdateConfigStruct(configStruct, variables)
 	utils.ReplacePlaceholders(configStruct)
-	// updatedConfigData, err := yaml.Marshal(&configStruct)
-	// if err != nil {
-
-	// }
-	// println(string(updatedConfigData))
 	executors.ExecHelper(configStruct)
-	gologger.Info().Label("Workflow-Complete").Str("Workflow-Author", configStruct.WorkflowConfig.Author).Msgf("Workflow '%s' Execution Complete", configStruct.WorkflowConfig.Name)
-
+	visuals.PrintCredit(configStruct.WorkflowConfig.Author, configStruct.WorkflowConfig.Name, "end")
 }
