@@ -28,6 +28,20 @@ func GetOutputFileNames(taskName, stdoutDir, stderrDir string) (string, string) 
 	return stdoutFile, stderrFile
 }
 
+func FindLineNumber(input, pattern string) int {
+	lines, err := ReadLinesFromFile(input)
+	if err != nil {
+		return -1
+	}
+	for i, line := range lines {
+		if strings.Contains(line, pattern) {
+			// Add 1 to convert from zero-based index to one-based line number
+			return i + 1
+		}
+	}
+	return -1 // Return -1 if the pattern is not found
+}
+
 func ReadLinesFromFile(filePath string) ([]string, error) {
 	// Check if the file exists
 	_, err := os.Stat(filePath)

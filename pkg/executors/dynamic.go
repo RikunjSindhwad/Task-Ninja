@@ -123,9 +123,10 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dynamicFile string, lines []string, wg *sync.WaitGroup, taskDone chan<- struct{}) {
 	defer wg.Done()
 	for _, line := range lines {
-		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "FileLine", line)
+		lineNumber := strconv.Itoa(utils.FindLineNumber(dynamicFile, line))
+		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "FileLine", lineNumber)
 		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicFile}}", line)
-		newtaskName := taskName + "-" + line
+		newtaskName := taskName + "-" + lineNumber
 		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
 			if strings.Contains(err.Error(), "timeout") {
 				visuals.PrintState("TIMEOUT", taskName, "")
