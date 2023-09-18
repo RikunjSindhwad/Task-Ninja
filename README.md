@@ -64,7 +64,7 @@ TaskNinja is inspired by the amazing work of the [trickest.io](https://trickest.
 <details>
 <summary>:rocket: Sample - Dynamic & parallel Execution</summary>
 
-### Workflow URL: [zap_scanner.yaml](https://github.com/RikunjSindhwad/Task-Ninja-Workflows/blob/main/EASM/Discovery/Subdomains/passiveSubdomains.yaml)
+### Workflow URL: [passiveSubdomains.yaml](https://github.com/RikunjSindhwad/Task-Ninja-Workflows/blob/main/EASM/Discovery/Subdomains/passiveSubdomains.yaml)
  
   ```bash
   root@robensive> root@robensive> Task-Ninja  -w test/passiveSubdomains.yaml -v tld_list=test/tld.txt,RESULT=test/result.txt
@@ -268,7 +268,7 @@ TaskNinja is easy to install using the following commands:
   ```
 ## Getting Started
 
-To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki/Getting-Started) in our Wiki. It provides step-by-step instructions on installation and usage.
+To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki/Getting-Started) in our Wiki. It provides step-by-step instructions on installation and usage. You can find all workflows in [Task-Ninja-Workflows](https://github.com/RikunjSindhwad/Task-Ninja-Workflows)
 
 ## Contributing
 
