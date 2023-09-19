@@ -37,7 +37,7 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 (-|     (-/_| (-(__  ( |_/    (-|\ | (-|   (-|\ |  (-|   (-/_| 
  _|,    _/  |, ____)  _| \,    _| \|, _|_,  _| \|, __|,  _/  |,
 (      (      (      (        (      (     (      (     (      
-         Made For 🥷  by Robensive                               Version=1.2
+         Made For 🥷  by Robensive                               Version=1.3
 ================================================================================
 ```
 
