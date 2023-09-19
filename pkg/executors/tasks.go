@@ -23,12 +23,7 @@ func executeCMD(taskName string, command string, stdoutDir string, stderrDir str
 	defer cancel()
 
 	// Create a command and set its attributes
-	stdoutFile := ""
-	stderrFile := ""
-	if stdoutDir != "" || stderrDir != "" {
-		stdoutFile = stdoutDir + "/" + strings.ReplaceAll(taskName, " ", "-") + ".stdout"
-		stderrFile = stderrDir + "/" + strings.ReplaceAll(taskName, " ", "-") + ".stderr"
-	}
+	stdoutFile, stderrFile := utils.GetLogPaths(stdoutDir, stderrDir, taskName)
 
 	cmd, err := createCommand(command, shell, ctx, stdoutFile, stderrFile, displayStdout)
 	if err != nil {

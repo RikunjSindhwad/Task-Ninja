@@ -2,30 +2,40 @@ package utils
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
+
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 )
 
-func DetermineOutputPaths(stdoutDir, stderrDir, taskName string) (string, string) {
+func GetLogPaths(stdoutDir, stderrDir, taskName string) (string, string) {
 	stdoutFile := ""
 	stderrFile := ""
 	if stdoutDir != "" || stderrDir != "" {
+		stdouterr := ensurePathExists(stdoutDir)
+		if stdouterr != nil {
+			visuals.PrintState("fetal", taskName, "Error creating stdout directory: "+stdouterr.Error())
+		}
+		stderrerr := ensurePathExists(stderrDir)
+		if stderrerr != nil {
+			visuals.PrintState("fetal", taskName, "Error creating stderr directory: "+stderrerr.Error())
+		}
 		stdoutFile = stdoutDir + "/" + strings.ReplaceAll(taskName, " ", "-") + ".stdout"
 		stderrFile = stderrDir + "/" + strings.ReplaceAll(taskName, " ", "-") + ".stderr"
 	}
 	return stdoutFile, stderrFile
 }
 
-func GetOutputFileNames(taskName, stdoutDir, stderrDir string) (string, string) {
-	stdoutFile := ""
-	stderrFile := ""
-	if stdoutDir != "" || stderrDir != "" {
-		formatName := strings.ReplaceAll(taskName, " ", "-")
-		stdoutFile = fmt.Sprintf("%s/%s.stdout", stdoutDir, formatName)
-		stderrFile = fmt.Sprintf("%s/%s.stderr", stderrDir, formatName)
+func ensurePathExists(path string) error {
+	// Check if the path already exists.
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// Path does not exist, create it.
+		err := os.MkdirAll(path, 0755)
+		if err != nil {
+			return err
+		}
 	}
-	return stdoutFile, stderrFile
+	return nil
 }
 
 func FindLineNumber(input, pattern string) int {

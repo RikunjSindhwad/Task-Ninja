@@ -31,6 +31,9 @@ func PrintState(state, taskName, msg string) {
 		gologger.Debug().Label(state).TimeStamp().Msg(msg)
 	case "fetal":
 		gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!")
+	case "workflow-error":
+		gologger.Fatal().Label("Workflow-Error").Msgf(msg)
+
 	}
 
 }
@@ -58,6 +61,7 @@ func PrintCredit(Author, workflowName string, Type string) {
 }
 
 func SetLevelDebug() {
+
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelDebug)
 }
 

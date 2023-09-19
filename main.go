@@ -20,10 +20,7 @@ func main() {
 
 	yamlFilePath := args.Workflow
 
-	configStruct, err := config.ReadYamlFromFile(yamlFilePath)
-	if err != nil {
-		visuals.PrintState("FATAL", "Workflow-Error", "Error Reading YAML")
-	}
+	configStruct := config.ReadYamlFromFile(yamlFilePath)
 
 	if configStruct.WorkflowConfig.Author != "" {
 		visuals.PrintCredit(configStruct.WorkflowConfig.Author, configStruct.WorkflowConfig.Name, "start")

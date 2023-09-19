@@ -29,7 +29,7 @@ func ParseArgs() *Args {
 
 	if options.Workflow == "" {
 		visuals.PrintBanner()
-		gologger.Fatal().Msg("Usage: TaskNinja -workflow <workflow.yaml> -debug")
+		gologger.Fatal().Label("Usage").Msg("Task-Ninja -workflow <workflow.yaml> -vars <var=value,var2=value2>")
 	}
 
 	return options
