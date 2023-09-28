@@ -15,6 +15,7 @@ type Args struct {
 	YamlVars goflags.StringSlice
 	Json     bool
 	NoBanner bool
+	Detailed bool
 }
 
 func ParseArgs() *Args {
@@ -24,7 +25,9 @@ func ParseArgs() *Args {
 	flagSet.StringVarP(&options.Workflow, "workflow", "w", "", "YAML Workflow Path")
 	flagSet.BoolVar(&options.Json, "json", false, "Json Log (default false)")
 	flagSet.BoolVarP(&options.NoBanner, "noBanner", "nb", false, "Do not print banner (default false)")
+	flagSet.BoolVarP(&options.Detailed, "detailed", "d", false, "Print detailed output (default false)")
 	flagSet.StringSliceVarP(&options.YamlVars, "vars", "v", nil, "yaml variables and values '<var=value,var2=value2>'", goflags.FileCommaSeparatedStringSliceOptions)
+
 	_ = flagSet.Parse()
 
 	if options.Workflow == "" {

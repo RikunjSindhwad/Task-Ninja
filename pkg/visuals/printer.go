@@ -65,6 +65,11 @@ func SetLevelDebug() {
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelDebug)
 }
 
+func SetLevelWarning() {
+
+	gologger.DefaultLogger.SetMaxLevel(levels.LevelWarning)
+}
+
 func JsonView() {
 	gologger.DefaultLogger.SetFormatter(&formatter.JSON{})
 }

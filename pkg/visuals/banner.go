@@ -11,7 +11,7 @@ import (
 )
 
 func PrintBanner() {
-	Version := "1.3"
+	Version := "1.4"
 
 	banner := (`
                                                         :=*#%@@@@#                        
@@ -56,8 +56,8 @@ func printLine() string {
 		"Made For 🥷  by Robensive\t\t\t\tVersion",
 		"Made With 💝 by Robensive\t\t\t\tVersion",
 		"Tasks Automation Framework by Robensive\t\tVersion",
+		"The Ultimate Tasks Automation Framework \t\tVersion",
 		"Inspired By trickest.io\t\t\t\tVersion",
-		"Improved version of raydar\t\t\t\tVersion",
 	}
 
 	randomIndex := rand.Intn(len(lines))

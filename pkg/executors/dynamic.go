@@ -126,6 +126,8 @@ func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeo
 		lineNumber := strconv.Itoa(utils.FindLineNumber(dynamicFile, line))
 		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "FileLine", lineNumber)
 		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicFile}}", line)
+		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{rand}}", utils.RandomString(5))
+		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{dynamicOut}}", lineNumber)
 		newtaskName := taskName + "-" + lineNumber
 		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
 			if strings.Contains(err.Error(), "timeout") {
@@ -146,6 +148,8 @@ func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, 
 	for i := startIdx; i <= endIdx; i++ {
 		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "Value", strconv.Itoa(i))
 		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicRange}}", strconv.Itoa(i))
+		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{rand}}", utils.RandomString(10))
+		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{dynamicOut}}", strconv.Itoa(i))
 		newtaskName := taskName + "-" + strconv.Itoa(i)
 		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
 			if strings.Contains(err.Error(), "timeout") {

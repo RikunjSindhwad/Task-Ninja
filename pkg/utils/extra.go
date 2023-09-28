@@ -2,9 +2,24 @@ package utils
 
 import (
 	"errors"
+	"math/rand"
 	"strconv"
 	"time"
 )
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func RandomString(length int) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
 
 func ConvertStringListToIntList(strList []string) ([]int, error) {
 	if len(strList) > 2 {

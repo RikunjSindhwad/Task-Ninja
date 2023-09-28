@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	visuals.SetLevelDebug()
+	visuals.SetLevelWarning()
 	args := utils.ParseArgs()
 	if !args.NoBanner {
 		visuals.PrintBanner()
@@ -16,6 +16,9 @@ func main() {
 
 	if args.Json {
 		visuals.JsonView()
+	}
+	if args.Detailed {
+		visuals.SetLevelDebug()
 	}
 
 	yamlFilePath := args.Workflow
