@@ -1,6 +1,6 @@
 # TaskNinja
 
-TaskNinja is a versatile and extensible task automation framework designed to simplify and streamline your workflow. Whether you're managing complex tasks, automating routine operations, or orchestrating a series of commands, TaskNinja is here to make your life easier.
+TaskNinja is a versatile and extensible task automation framework designed to simplify and streamline your workflow. Whether you're managing complex tasks, automating routine operations, or orchestrating a series of commands, TaskNinja is here to make your life easier. Task ninja takes input from basic yaml file and executes within docker containers. It has ability to take output from that container and pass it to the next container by just specifying basic yaml input. The purpose to make this tool was to automate some tasks for my personal use. Feel free to reachout to me for a private workflows that I have built or for custom workflow for your company needs. This can save your $$$$
 
 
 ```
@@ -37,7 +37,7 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 (-|     (-/_| (-(__  ( |_/    (-|\ | (-|   (-|\ |  (-|   (-/_| 
  _|,    _/  |, ____)  _| \,    _| \|, _|_,  _| \|, __|,  _/  |,
 (      (      (      (        (      (     (      (     (      
-         Made For 🥷  by Robensive                               Version=1.3
+         Made For 🥷  by Robensive                               Version=2.0
 ================================================================================
 ```
 
@@ -59,189 +59,80 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 
 ## Acknowledgments
 
-TaskNinja is inspired by the amazing work of the [trickest.io](https://trickest.io) platform and the [Raydar](https://github.com/devanshbatham/rayder) tool. I extend our gratitude to their contributions to the task automation and cybersecurity community.
+TaskNinja is inspired by the amazing work of the [trickest.io](https://trickest.io) platform and the [Raydar](https://github.com/devanshbatham/rayder) tool. I extend my gratitude to their contributions to the task automation and cybersecurity community.
+
+## Samples
 
 <details>
 <summary>:rocket: Sample - Dynamic & parallel Execution</summary>
 
 ### Workflow URL: [passiveSubdomains.yaml](https://github.com/RikunjSindhwad/Task-Ninja-Workflows/blob/main/EASM/Discovery/Subdomains/passiveSubdomains.yaml)
  
-  ```bash
-  root@robensive> root@robensive> Task-Ninja  -w test/passiveSubdomains.yaml -v tld_list=test/tld.txt,RESULT=test/result.txt
+```bash
+root@robensive> Task-Ninja -nb -w passiveSubdomains.yaml -v tld_list=test/tld.txt
 ================================================================================
 [Workflow-Credit] Tasked Workflow 'Discovery Passive Subdomains' Workflow-Author=Rikunj Sindhwad
 ================================================================================
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:18:13-04:00] Task Started TaskName=Create Main Directories
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Static TaskName=Create Main Directories
-[Static-Task: Create Main Directories] [2023-09-17T12:18:13-04:00] Executing Task
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:18:13-04:00] Task Finished TaskName=Create Main Directories
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] There are required Tasks JIDC Subdomains, Subdomain Center Subdomains TaskName=Wait-Job1
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:18:14-04:00] Task Started TaskName=Subdomain Center Subdomains
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Dynamic TaskName=Subdomain Center Subdomains
-[START] [2023-09-17T12:18:14-04:00] Task Started TaskName=JIDC Subdomains
-[Task-Info] Running Tasks Parallel Threads=3
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Dynamic TaskName=JIDC Subdomains
-[Task-Info] Running Tasks Parallel Threads=3
-[Dynamic-Task: JIDC Subdomains] [2023-09-17T12:18:14-04:00] Running Tasks Parallel FileLine=tesla.com
-[Dynamic-Task: Subdomain Center Subdomains] [2023-09-17T12:18:14-04:00] Running Tasks Parallel FileLine=tesla.com
-[Dynamic-Task: Subdomain Center Subdomains] [2023-09-17T12:18:14-04:00] Running Tasks Parallel FileLine=nottesla.com
-[Dynamic-Task: JIDC Subdomains] [2023-09-17T12:18:14-04:00] Running Tasks Parallel FileLine=nottesla.com
-[Dynamic-Task: JIDC Subdomains] [2023-09-17T12:18:14-04:00] Running Tasks Parallel FileLine=robensive.in
-[Dynamic-Task: Subdomain Center Subdomains] [2023-09-17T12:18:14-04:00] Running Tasks Parallel FileLine=robensive.in
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:18:18-04:00] Task Finished TaskName=Subdomain Center Subdomains
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:18:18-04:00] Task Finished TaskName=JIDC Subdomains
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:18:19-04:00] Task Started TaskName=Wait-Job1
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Static TaskName=Wait-Job1
-[Static-Task: Wait-Job1] [2023-09-17T12:18:19-04:00] Executing Task
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:18:19-04:00] Task Finished TaskName=Wait-Job1
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] There are required Tasks AssetFinder, Findomain TaskName=Wait-Job2
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:18:20-04:00] Task Started TaskName=Findomain
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:18:20-04:00] Task Started TaskName=AssetFinder
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Dynamic TaskName=AssetFinder
-[Task-Info] Running Tasks Parallel Threads=3
-[Task-Info] Task is Dynamic TaskName=Findomain
-[Task-Info] Running Tasks Parallel Threads=3
-[Dynamic-Task: Findomain] [2023-09-17T12:18:20-04:00] Running Tasks Parallel FileLine=tesla.com
-[Dynamic-Task: Findomain] [2023-09-17T12:18:20-04:00] Running Tasks Parallel FileLine=nottesla.com
-[Dynamic-Task: AssetFinder] [2023-09-17T12:18:20-04:00] Running Tasks Parallel FileLine=tesla.com
-[Dynamic-Task: Findomain] [2023-09-17T12:18:20-04:00] Running Tasks Parallel FileLine=robensive.in
-[Dynamic-Task: AssetFinder] [2023-09-17T12:18:20-04:00] Running Tasks Parallel FileLine=nottesla.com
-[Dynamic-Task: AssetFinder] [2023-09-17T12:18:20-04:00] Running Tasks Parallel FileLine=robensive.in
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:18:37-04:00] Task Finished TaskName=AssetFinder
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:20:33-04:00] Task Finished TaskName=Findomain
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:20:33-04:00] Task Started TaskName=Wait-Job2
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Static TaskName=Wait-Job2
-[Static-Task: Wait-Job2] [2023-09-17T12:20:33-04:00] Executing Task
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:20:33-04:00] Task Finished TaskName=Wait-Job2
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] There are required Tasks JIDC Subdomains, Subdomain Center Subdomains, AssetFinder, Findomain, VITA Subdomains, Subfinder TaskName=Merge All
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:20:34-04:00] Task Started TaskName=Subfinder
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:20:34-04:00] Task Started TaskName=VITA Subdomains
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Dynamic TaskName=VITA Subdomains
-[Task-Info] Running Tasks Parallel Threads=3
-[Task-Info] Task is Dynamic TaskName=Subfinder
-[Task-Info] Running Tasks Parallel Threads=3
-[Dynamic-Task: Subfinder] [2023-09-17T12:20:34-04:00] Running Tasks Parallel FileLine=tesla.com
-[Dynamic-Task: VITA Subdomains] [2023-09-17T12:20:34-04:00] Running Tasks Parallel FileLine=nottesla.com
-[Dynamic-Task: Subfinder] [2023-09-17T12:20:34-04:00] Running Tasks Parallel FileLine=robensive.in
-[Dynamic-Task: VITA Subdomains] [2023-09-17T12:20:34-04:00] Running Tasks Parallel FileLine=tesla.com
-[Dynamic-Task: VITA Subdomains] [2023-09-17T12:20:34-04:00] Running Tasks Parallel FileLine=robensive.in
-[Dynamic-Task: Subfinder] [2023-09-17T12:20:34-04:00] Running Tasks Parallel FileLine=nottesla.com
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:20:36-04:00] Task Finished TaskName=VITA Subdomains
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:21:18-04:00] Task Finished TaskName=Subfinder
-------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:21:19-04:00] Task Started TaskName=Merge All
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Static TaskName=Merge All
-[Static-Task: Merge All] [2023-09-17T12:21:19-04:00] Executing Task
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:21:19-04:00] Task Finished TaskName=Merge All
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] There are required Tasks Merge Both TaskName=Get Result
-------------------------------------------------------------------------------------------------------------------------
-[START] [2023-09-17T12:21:20-04:00] Task Started TaskName=Get Result
-------------------------------------------------------------------------------------------------------------------------
-[Task-Info] Task is Static TaskName=Get Result
-[Static-Task: Get Result] [2023-09-17T12:21:20-04:00] Executing Task
-Check-Result:test/result.txt
-IdentifiedLines:2806
-------------------------------------------------------------------------------------------------------------------------
-[SUCCESS] [2023-09-17T12:21:20-04:00] Task Finished TaskName=Get Result
-------------------------------------------------------------------------------------------------------------------------
-[Workflow-Complete] Workflow 'Discovery Passive Subdomains' Execution Complete Workflow-Author=Rikunj Sindhwad
+[START] [2023-12-04T14:13:31-05:00] Task Started TaskName=Subdomain Center Subdomains
+[START] [2023-12-04T14:13:31-05:00] Task Started TaskName=JIDC Subdomains
+[SUCCESS] [2023-12-04T14:13:35-05:00] Task Finished TaskName=JIDC Subdomains
+[SUCCESS] [2023-12-04T14:13:36-05:00] Task Finished TaskName=Subdomain Center Subdomains
+[START] [2023-12-04T14:13:37-05:00] Task Started TaskName=AssetFinder
+[SUCCESS] [2023-12-04T14:13:44-05:00] Task Finished TaskName=AssetFinder
+[START] [2023-12-04T14:13:45-05:00] Task Started TaskName=Findomain
+[SUCCESS] [2023-12-04T14:13:46-05:00] Task Finished TaskName=Findomain
+[START] [2023-12-04T14:13:47-05:00] Task Started TaskName=Subfinder
+[START] [2023-12-04T14:13:47-05:00] Task Started TaskName=VITA Subdomains
+[SUCCESS] [2023-12-04T14:14:09-05:00] Task Finished TaskName=Subfinder
+[SUCCESS] [2023-12-04T14:14:21-05:00] Task Finished TaskName=VITA Subdomains
+[START] [2023-12-04T14:14:22-05:00] Task Started TaskName=Merge All
+[SUCCESS] [2023-12-04T14:14:22-05:00] Task Finished TaskName=Merge All
+[START] [2023-12-04T14:14:23-05:00] Task Started TaskName=Result
+Check-Result: /home/kali/Workflows/hive/Result/out/result.txt
+IdentifiedLines:3
+[SUCCESS] [2023-12-04T14:14:24-05:00] Task Finished TaskName=Result
 ================================================================================
+[Workflow-Complete] Workflow 'Discovery Passive Subdomains' Execution Complete Time Taken=53.77675225s
+================================================================================
+
 ```
 </details>
 
 <details>
 <summary>:robot: Sample - Static Execution</summary>
 
-### Workflow URL: [zap_scanner.yaml](https://github.com/RikunjSindhwad/Task-Ninja-Workflows/blob/main/Scanning/zap_scanner.yaml)
+### Workflow URL: [apk_url.yaml](https://github.com/RikunjSindhwad/Task-Ninja-Workflows/blob/main/Scanning/apk_url.yaml)
+
+> `-detailed` flag gives more output
  
   ```bash
-  root@robensive>  Task-Ninja -w zap_scanner.yaml -nb -v url_list=urls.txt
-  ================================================================================
-  [Workflow-Credit] Tasked Workflow 'ZAP Scanner' Workflow-Author=Rikunj Sindhwad
-  ================================================================================
-  ------------------------------------------------------------------------------------------------------------------------
-  [START] [2023-09-16T09:12:36Z] Task Started TaskName=Create Required Directories
-  ------------------------------------------------------------------------------------------------------------------------
-  [Task-Info] Task is Static TaskName=Create Required Directories
-  [Static-Task: Create Required Directories] [2023-09-16T09:12:36Z] Executing Task
-  ------------------------------------------------------------------------------------------------------------------------
-  [SUCCESS] [2023-09-16T09:12:36Z] Task Finished TaskName=Create Required Directories
-  ------------------------------------------------------------------------------------------------------------------------
-  ------------------------------------------------------------------------------------------------------------------------
-  [START] [2023-09-16T09:12:37Z] Task Started TaskName=Downnload zap yaml
-  ------------------------------------------------------------------------------------------------------------------------
-  [Task-Info] Task is Static TaskName=Downnload zap yaml
-  [Static-Task: Downnload zap yaml] [2023-09-16T09:12:37Z] Executing Task
-  ------------------------------------------------------------------------------------------------------------------------
-  [SUCCESS] [2023-09-16T09:12:38Z] Task Finished TaskName=Downnload zap yaml
-  ------------------------------------------------------------------------------------------------------------------------
-  ------------------------------------------------------------------------------------------------------------------------
-  [START] [2023-09-16T09:12:39Z] Task Started TaskName=Modify ZAP config
-  ------------------------------------------------------------------------------------------------------------------------
-  [Task-Info] Task is Static TaskName=Modify ZAP config
-  [Static-Task: Modify ZAP config] [2023-09-16T09:12:39Z] Executing Task
-  ------------------------------------------------------------------------------------------------------------------------
-  [SUCCESS] [2023-09-16T09:12:39Z] Task Finished TaskName=Modify ZAP config
-  ------------------------------------------------------------------------------------------------------------------------
-  ------------------------------------------------------------------------------------------------------------------------
-  [START] [2023-09-16T09:12:40Z] Task Started TaskName=run ZAP
-  ------------------------------------------------------------------------------------------------------------------------
-  [Task-Info] Task is Static TaskName=run ZAP
-  [Static-Task: run ZAP] [2023-09-16T09:12:40Z] Executing Task
-  ------------------------------------------------------------------------------------------------------------------------
-  [START] [2023-09-16T09:14:20Z] Task Started TaskName=Result-Check
-  ------------------------------------------------------------------------------------------------------------------------
-  [Task-Info] Task is Static TaskName=Result-Check
-  [Static-Task: Result-Check] [2023-09-16T09:14:20Z] Executing Task
-  "Cross Site Scripting (Reflected)","High (Medium)","https://ginandjuice.shop/catalog/filter?category=Accessories%0A%0D%0A%0D%3CscrIpt%3Ealert%281%29%3B%3C%2FscRipt%3E","category","GET","<scrIpt>alert(1);</scRipt>"
-  "Cross Site Scripting (Reflected)","High (Medium)","https://ginandjuice.shop/login","username","POST","';alert(1);'"
-  "Vulnerable JS Library","Medium (Medium)","https://ginandjuice.shop/resources/js/angular_1-7-7.js","","GET","/*
-  AngularJS v1.7.7"
-  result saved in hive/out/ZAP-Result.CSV
-  ------------------------------------------------------------------------------------------------------------------------
-  [SUCCESS] [2023-09-16T09:14:20Z] Task Finished TaskName=Result-Check
-  ------------------------------------------------------------------------------------------------------------------------
-  [Workflow-Complete] Workflow 'ZAP Scanner' Execution Complete Workflow-Author=Rikunj Sindhwad
-  ================================================================================
+  root@robensive> Task-Ninja -nb -w apk_Urls.yml -v apkpath=test/allsafe.apk -detailed
+================================================================================
+[Workflow-Credit] Tasked Workflow 'APK URLs Checker' Workflow-Author=Rikunj Sindhwad
+================================================================================
+[START] [2023-12-04T14:24:08-05:00] Task Started TaskName=Decompile APK
+[Task-Info] Task is Static TaskName=Decompile APK
+[Static-Task: Decompile APK] [2023-12-04T14:24:08-05:00] Executing Task
+[SUCCESS] [2023-12-04T14:24:26-05:00] Task Finished TaskName=Decompile APK
+[START] [2023-12-04T14:24:27-05:00] Task Started TaskName=Extract URLS
+[Task-Info] Task is Static TaskName=Extract URLS
+[Static-Task: Extract URLS] [2023-12-04T14:24:27-05:00] Executing Task
+[SUCCESS] [2023-12-04T14:24:32-05:00] Task Finished TaskName=Extract URLS
+[Task-Info] There are required Tasks Extract URLS TaskName=Remove Duplicates
+[START] [2023-12-04T14:24:33-05:00] Task Started TaskName=Remove Duplicates
+[Task-Info] Task is Static TaskName=Remove Duplicates
+[Static-Task: Remove Duplicates] [2023-12-04T14:24:33-05:00] Executing Task
+[SUCCESS] [2023-12-04T14:24:35-05:00] Task Finished TaskName=Remove Duplicates
+[Task-Info] There are required Tasks Remove Duplicates TaskName=Save Results
+[START] [2023-12-04T14:24:36-05:00] Task Started TaskName=Save Results
+[Task-Info] Task is Static TaskName=Save Results
+[Static-Task: Save Results] [2023-12-04T14:24:36-05:00] Executing Task
+Check-Result: /home/kali/Workflows/hive/Save-Results/out/result.txt
+IdentifiedURLS:55
+[SUCCESS] [2023-12-04T14:24:37-05:00] Task Finished TaskName=Save Results
+================================================================================
+[Workflow-Complete] Workflow 'APK URLs Checker' Execution Complete Time Taken=30.324584125s
+================================================================================
   ```
 </details>
 
@@ -268,11 +159,11 @@ TaskNinja is easy to install using the following commands:
   ```
 ## Getting Started
 
-To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki/Getting-Started) in our Wiki. It provides step-by-step instructions on installation and usage. You can find all workflows in [Task-Ninja-Workflows](https://github.com/RikunjSindhwad/Task-Ninja-Workflows)
+To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki/Getting-Started) in Wiki. It provides step-by-step instructions on installation and usage. You can find all workflows in [Task-Ninja-Workflows](https://github.com/RikunjSindhwad/Task-Ninja-Workflows)
 
 ## Contributing
 
-I welcome contributions from the community! If you'd like to contribute to TaskNinja, please follow our [Contribution Guidelines](CONTRIBUTING.md).
+I welcome contributions from the community! If you'd like to contribute to TaskNinja, please follow [Contribution Guidelines](CONTRIBUTING.md).
 
 ## License
 
