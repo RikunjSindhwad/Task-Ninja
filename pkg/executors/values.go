@@ -18,6 +18,10 @@ func GetTaskDataWithName(taskName string, config *config.Config) map[string]inte
 				"dynamicFile":  task.DynamicFile,
 				"dynamicRange": task.DynamicRange,
 				"maxThreads":   task.MaxThreads,
+				"image":        task.Image,
+				"dockerHive":   task.DockerHive,
+				"inputMounts":  task.InputMouts,
+				"inputs":       task.Inputs,
 			}
 			return taskData
 		}

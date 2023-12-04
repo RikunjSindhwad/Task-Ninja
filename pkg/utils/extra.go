@@ -3,11 +3,27 @@ package utils
 import (
 	"errors"
 	"math/rand"
+	"regexp"
 	"strconv"
 	"time"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func IsURL(str string) bool {
+	re := regexp.MustCompile(`^https?://`)
+	return re.MatchString(str)
+}
+
+func SanitizeTaskName(taskName string) string {
+	// Define a regular expression to match special characters
+	specialChars := regexp.MustCompile("[^a-zA-Z0-9_-]+")
+
+	// Replace special characters with underscores
+	sanitized := specialChars.ReplaceAllString(taskName, "-")
+
+	return sanitized
+}
 
 func init() {
 	rand.Seed(time.Now().UnixNano())

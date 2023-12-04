@@ -3,6 +3,8 @@ package executors
 import (
 	"context"
 	"fmt"
+	"io"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -10,53 +12,154 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/client"
 )
 
-func executeCMD(taskName string, command string, stdoutDir string, stderrDir string, shell string, timeout time.Duration, displayStdout bool) error {
-	// If no timeout is specified, set a default timeout of 1 day
-	if timeout == 0 {
-		timeout = time.Duration(24) * time.Hour
+func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, mounts, inputs []string, timeout time.Duration, displayStdout, dynamic, enablelogs bool) error {
+	if defaultHive == "" {
+		defaultHive = "hive"
 	}
+	if dockerHive == "" {
+		dockerHive = "/hive"
+	}
+	iteration := ""
+	if dynamic {
+		dynamicData := strings.Split(taskName, ":")
+		taskName = dynamicData[0]
+		iteration = dynamicData[1]
+	}
+	if timeout == 0 {
+		timeout = 24 * time.Hour
+	}
+	sanitizedTaskName := utils.SanitizeTaskName(taskName)
+	hostHiveTaskDir, err := utils.GetHostHiveTaskDirectory(taskName, defaultHive)
+	if dynamic {
+		hostHiveTaskDir = filepath.Join(hostHiveTaskDir, iteration)
+		err = utils.EnsurePathExists(hostHiveTaskDir)
+	}
+	if err != nil {
+		return err
+	}
+	hostHiveTaskInputDir, hostHiveTaskOutputDir := utils.GetInputOutput(hostHiveTaskDir)
+	dockerHiveTaskDir := filepath.Join(dockerHive, sanitizedTaskName)
+
+	stdoutFile, stderrfile := utils.GeterrorLogPath(hostHiveTaskDir)
+
+	utils.CopyInputFiles(inputs, hostHiveTaskInputDir)
+
+	err = utils.CopyMountFiles(mounts, hostHiveTaskInputDir, defaultHive)
+	if err != nil {
+		return err
+	}
+
+	command = utils.ReplaceDockerplaceholders(command, dockerHive, dockerHiveTaskDir, hostHiveTaskDir, hostHiveTaskOutputDir, hostHiveTaskInputDir)
+	command = utils.ReplaceTaskPlaceholders(command, dockerHive, "static")
 
 	// Create a context with the specified timeout
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Create a command and set its attributes
-	stdoutFile, stderrFile := utils.GetLogPaths(stdoutDir, stderrDir, taskName)
-
-	cmd, err := createCommand(command, shell, ctx, stdoutFile, stderrFile, displayStdout)
+	// Initialize Docker client
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("failed to create command for task '%s': %v", taskName, err)
+		return fmt.Errorf("failed to create docker client: %v", err)
 	}
 
-	// Start the command and capture any errors
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start command for task '%s': %v", taskName, err)
+	isexist, err := utils.ImageExists(image)
+	if err != nil {
+		return err
 	}
+	// Pull Image if not exist
 
-	// Create a channel for receiving timeout signals
-	done := make(chan error, 1)
-
-	// Run the command in a goroutine and wait for it to finish
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	// Check for timeout or completion of the command
-	select {
-	case <-ctx.Done():
-		// Timeout occurred
-		return fmt.Errorf("timeout occurred while executing command for task '%s'", taskName)
-	case err := <-done:
-		// Command has finished
+	if !isexist {
+		visuals.PrintState("Task-Info", taskName, "Pulling Docker Image: "+image)
+		out1, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
 		if err != nil {
-			// Return the error
-			return fmt.Errorf("error executing command for task '%s': %v", taskName, err)
+			return fmt.Errorf("failed to pull Docker image '%s': %v", image, err)
 		}
+		defer out1.Close()
+		_, err = io.Copy(io.Discard, out1)
+		if err != nil {
+			return fmt.Errorf("failed to copu Docker image pull data '%s': %v", image, err)
+		}
+
 	}
 
-	// Command has finished successfully
+	// Docker Command
+	cmd, err := utils.InspectImageEntrypoint(image, command)
+	if err != nil {
+		return fmt.Errorf("error inspecting Docker image entrypoint: %v", err)
+	}
+
+	resultVolume := mount.Mount{
+		Type:   mount.TypeBind,
+		Source: hostHiveTaskDir,
+		Target: dockerHive,
+	}
+
+	// Create a container
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: image,
+		Cmd:   cmd,
+	}, &container.HostConfig{
+		Mounts:     []mount.Mount{resultVolume},
+		Privileged: true,
+	}, nil, nil, "")
+	if err != nil {
+		return fmt.Errorf("failed to create container for task '%s': %v", sanitizedTaskName, err)
+	}
+
+	// Start the container
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return fmt.Errorf("failed to start container for task '%s': %v", taskName, err)
+	}
+
+	// Wait for the container to finish
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("error while waiting for container for task '%s': %v", taskName, err)
+		}
+	case <-statusCh:
+	}
+
+	// Get the logs from the container
+	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+	if err != nil {
+		return fmt.Errorf("failed to get logs for task '%s': %v", taskName, err)
+	}
+	defer out.Close()
+
+	// Parse the logs to separate stdout and stderr
+	stdoutLogs, stderrLogs, err := utils.ParseDockerLogs(out)
+	if err != nil {
+		return fmt.Errorf("failed to parse logs for task '%s': %v", taskName, err)
+	}
+
+	// Optionally display stdout
+	if displayStdout {
+		if len(stdoutLogs) > 0 {
+			fmt.Print(visuals.PrintRandomColor(string(stdoutLogs), 32)) //green
+		}
+		if len(stderrLogs) > 0 {
+			fmt.Print(visuals.PrintRandomColor(string(stdoutLogs), 31)) //red
+		}
+
+	}
+	if enablelogs {
+		utils.WriteLogs(stdoutFile, stderrfile, stdoutLogs, stderrLogs)
+	}
+
+	// Remove the container once it's finished
+	if err := cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+		return fmt.Errorf("failed to remove container for task '%s': %v", taskName, err)
+	}
+
 	return nil
 }
 
@@ -125,20 +228,22 @@ func ExecHelper(config *config.Config) {
 	wg.Wait()
 }
 
-func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent bool, stop bool) error {
+func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dockerimage, dockerHive string, mounts, inputs []string) error {
 	visuals.PrintState("Task-Info", taskName, "Task is Static")
 	visuals.PrintState("Static-Task: "+taskName, taskName, "Executing Task")
-	err := executeCMD(taskName, strings.Join(commands, " && "), wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent)
+
+	err := executeDockerCMD(taskName, strings.Join(commands, " && "), wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, false, wfc.EnableLogs)
+
 	if err != nil {
-		if strings.Contains(err.Error(), "timeout") {
-			visuals.PrintState("TIMEOUT", taskName, "")
+		if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "waiting for container") {
+			visuals.PrintState("TIMEOUT", taskName, err.Error())
 		} else {
-			visuals.PrintState("ERROR", taskName, "")
+			visuals.PrintState("ERROR", taskName, err.Error())
 		}
 		if stop {
 
 			// gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!")
-			visuals.PrintState("FETAL", taskName, "")
+			visuals.PrintState("FETAL", taskName, err.Error())
 			return err
 		}
 		return err
@@ -153,16 +258,23 @@ func executeTask(config *config.Config, taskName string, taskData interface{}) e
 	silent = !silent
 	stop := utils.GetInterfaceVal(taskData, "stop").(bool)
 	wfc := &config.WorkflowConfig
-
+	dockerImage := utils.GetInterfaceVal(taskData, "image").(string)
+	dockerhive := utils.GetInterfaceVal(taskData, "dockerHive").(string)
+	mounts := utils.GetInterfaceVal(taskData, "inputMounts").([]string)
+	inputs := utils.GetInterfaceVal(taskData, "inputs").([]string)
+	// default docker image from workflow config
+	if dockerImage == "" {
+		dockerImage = config.WorkflowConfig.DefaultDockerimage
+	}
 	taskType := utils.GetInterfaceVal(taskData, "type").(string)
-	if strings.ToLower(taskType) == "dynamic" {
-		err := executeDynamicTask(taskName, commands, wfc, timeout, silent, stop, taskData)
+	if strings.ToLower(taskType) == "dynamic" || taskData.(map[string]interface{})["dynamicFile"] != "" || taskData.(map[string]interface{})["dynamicRange"] != "" {
+		err := executeDynamicTask(taskName, commands, wfc, timeout, silent, stop, taskData, dockerImage, dockerhive, mounts, inputs)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
-	err := executeSingleTask(taskName, commands, wfc, timeout, silent, stop)
+	err := executeSingleTask(taskName, commands, wfc, timeout, silent, stop, dockerImage, dockerhive, mounts, inputs)
 	if err != nil {
 		return err
 	}

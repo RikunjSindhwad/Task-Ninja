@@ -11,7 +11,7 @@ import (
 )
 
 func PrintBanner() {
-	Version := "1.4"
+	Version := "2.0"
 
 	banner := (`
                                                         :=*#%@@@@#                        
@@ -39,13 +39,15 @@ func PrintBanner() {
                                  :=*%@@@@@@@@@@*                                          
                                      .-=*#%@@@@@#.                                        
                                            .:-+*#%-                                       
- ____,  ____, ____,  __, ,    _,  _, __,   _,  _,  _,    ____,
+`)
+	banner += PrintRandomColor(`
+____,  ____, ____,  __, ,    _,  _, __,   _,  _,  _,    ____,
 (-|    (-/_| (-(__  ( |_/    (-|\ | (-|   (-|\ |  (-|   (-/_| 
  _|,   _/  |, ____)  _| \,    _| \|, _|_,  _| \|, __|,  _/  |,
 (     (      (      (        (      (     (      (     (      
 	`)
 	fmt.Fprintln(os.Stderr, strings.Repeat("=", 80))
-	gologger.Print().Str(printLine(), Version).Msg(banner)
+	gologger.Print().Str(PrintRandomColor(printLine()), PrintRandomColor(Version)).Msg(banner)
 	fmt.Fprintln(os.Stderr, strings.Repeat("=", 80))
 
 }

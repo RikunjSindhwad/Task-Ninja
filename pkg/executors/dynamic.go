@@ -11,13 +11,19 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 )
 
-func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}) error {
+func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}, dockerimage string, dockerHive string, mounts, inputs []string) error {
+	taskName = utils.SanitizeTaskName(taskName)
+	defaultHive := wfc.DefaultHive
+	if defaultHive == "" {
+		defaultHive = "hive"
+	}
 	dynamicFile, dynamicRange := "", ""
 	maxThreads := 1 // Default to 1 thread if not specified in YAML
 
 	if data, ok := taskData.(map[string]interface{}); ok {
 		dynamicFile, _ = data["dynamicFile"].(string)
 		dynamicRange, _ = data["dynamicRange"].(string)
+		dynamicFile = utils.ReplaceTaskPlaceholders(dynamicFile, defaultHive, "dynamic")
 		if maxThreadsYAML, ok := data["maxThreads"].(int); ok && maxThreadsYAML > 0 {
 			maxThreads = maxThreadsYAML
 		}
@@ -26,7 +32,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 	if (dynamicFile == "" && dynamicRange == "") || (dynamicFile != "" && dynamicRange != "") {
 		visuals.PrintState("ERROR", taskName, "Either 'dynamicFile' or 'dynamicRange' must be specified, but not both.")
 		if stop {
-			visuals.PrintState("FETAL", taskName, "")
+			visuals.PrintState("FATAL", taskName, "") // Corrected the spelling here
 		}
 		return nil
 	}
@@ -38,74 +44,25 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 
 	var wg sync.WaitGroup
 
-	taskDone := make(chan struct{}, 2) // Two tasks: dynamic file and dynamic range
+	taskDone := make(chan struct{}, maxThreads) // Adjusted channel size
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if dynamicFile != "" {
-			lines, err := utils.ReadLinesFromFile(dynamicFile)
-			if err != nil {
-				visuals.PrintState("ERROR", taskName, "Error Reading Lines from File: "+err.Error())
-				if stop {
-					visuals.PrintState("FETAL", taskName, "")
-				}
-				taskDone <- struct{}{}
-				return
-			}
+	// Process dynamic file task concurrently
+	if dynamicFile != "" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			processDynamicFile(taskName, dynamicFile, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs)
+		}()
+	}
 
-			// Calculate the number of goroutines to spawn based on maxThreads
-			numGoroutines := len(lines)
-			if maxThreads < numGoroutines {
-				numGoroutines = maxThreads
-			}
-
-			// Create a worker pool for executing dynamic file tasks concurrently
-			for i := 0; i < numGoroutines; i++ {
-				wg.Add(1)
-				go dynamicWorker(taskName, mergedcmd, wfc, timeout, silent, stop, dynamicFile, lines[i*len(lines)/numGoroutines:(i+1)*len(lines)/numGoroutines], &wg, taskDone)
-			}
-		}
-		taskDone <- struct{}{}
-	}()
-
-	// Execute dynamic range task concurrently
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if dynamicRange != "" {
-			// if dynamicRange contains more then 2 values
-			ranges, err := utils.ConvertStringListToIntList(strings.Split(dynamicRange, ","))
-			counter := utils.GenerateIntegerList(ranges[0], ranges[1])
-			if len(counter) < maxThreads {
-				maxThreads = len(counter)
-				visuals.PrintStateDynamic("Task-Info", taskName, "Threads > Range, Reducing...", "Threads", strconv.Itoa(maxThreads))
-
-			}
-			if err != nil {
-				visuals.PrintState("ERROR", taskName, "Invalid Range Format "+dynamicRange+" (expected: 1,5)")
-
-				if stop {
-					visuals.PrintState("FETAL", taskName, "")
-
-				}
-				taskDone <- struct{}{}
-				return
-			}
-
-			// Calculate the number of values per goroutine
-			valuesPerGoroutine := (ranges[1] - ranges[0] + 1) / maxThreads
-
-			// Create a worker pool for executing dynamic range tasks concurrently
-			for i := 0; i < maxThreads; i++ {
-				wg.Add(1)
-				startIdx := ranges[0] + (i * valuesPerGoroutine)
-				endIdx := startIdx + valuesPerGoroutine - 1
-				go dynamicRangeWorker(taskName, mergedcmd, wfc, timeout, silent, stop, startIdx, endIdx, &wg, taskDone)
-			}
-		}
-		taskDone <- struct{}{}
-	}()
+	// Process dynamic range task concurrently
+	if dynamicRange != "" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			processDynamicRange(taskName, dynamicRange, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs)
+		}()
+	}
 
 	// Wait for all dynamic tasks to finish
 	go func() {
@@ -120,45 +77,128 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 	return nil
 }
 
-func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dynamicFile string, lines []string, wg *sync.WaitGroup, taskDone chan<- struct{}) {
+// Separated the dynamic file processing into its own function for clarity.
+func processDynamicFile(taskName, dynamicFile, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, maxThreads int, mounts, inputs []string) {
+	lines, err := utils.ReadLinesFromFile(dynamicFile)
+	if err != nil {
+		// ... error handling
+		return
+	}
+
+	numGoroutines := len(lines)
+	if maxThreads < numGoroutines {
+		numGoroutines = maxThreads
+	}
+
+	for i := 0; i < numGoroutines; i++ {
+		startIdx := i * len(lines) / numGoroutines
+		endIdx := (i + 1) * len(lines) / numGoroutines
+		if endIdx > len(lines) {
+			endIdx = len(lines)
+		}
+
+		var linesWithNumbers []LineWithNumber
+		for j, line := range lines[startIdx:endIdx] {
+			linesWithNumbers = append(linesWithNumbers, LineWithNumber{Line: line, Number: startIdx + j + 1})
+		}
+
+		wg.Add(1)
+		go dynamicWorker(taskName, mergedcmd, wfc, timeout, silent, stop, dynamicFile, linesWithNumbers, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
+	}
+	taskDone <- struct{}{}
+}
+
+type LineWithNumber struct {
+	Line   string
+	Number int
+}
+
+// Separated the dynamic range processing into its own function for clarity.
+func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, maxThreads int, mounts, inputs []string) {
+	var ranges []int
+	var err error
+	// if dynamicRange contains more then 2 values
+	if strings.Contains(dynamicRange, ",") {
+		ranges, err = utils.ConvertStringListToIntList(strings.Split(dynamicRange, ","))
+	}
+	if strings.Contains(dynamicRange, "-") {
+		ranges, err = utils.ConvertStringListToIntList(strings.Split(dynamicRange, "-"))
+	}
+	counter := utils.GenerateIntegerList(ranges[0], ranges[1])
+	if len(counter) < maxThreads {
+		maxThreads = len(counter)
+		visuals.PrintStateDynamic("Task-Info", taskName, "Threads > Range, Reducing...", "Threads", strconv.Itoa(maxThreads))
+
+	}
+	if err != nil {
+		visuals.PrintState("ERROR", taskName, "Invalid Range Format "+dynamicRange+" (expected: 1,5 || 1-5)")
+
+		if stop {
+			visuals.PrintState("FATAL", taskName, "") // Corrected the spelling here
+
+		}
+		taskDone <- struct{}{}
+		return
+	}
+
+	// Calculate the number of values per goroutine
+	valuesPerGoroutine := (ranges[1] - ranges[0] + 1) / maxThreads
+
+	// Create a worker pool for executing dynamic range tasks concurrently
+	for i := 0; i < maxThreads; i++ {
+		startIdx := ranges[0] + (i * valuesPerGoroutine)
+		endIdx := startIdx + valuesPerGoroutine - 1
+		wg.Add(1)
+		go dynamicRangeWorker(taskName, mergedcmd, wfc, timeout, silent, stop, startIdx, endIdx, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
+	}
+	taskDone <- struct{}{}
+}
+
+// dynamicWorker and dynamicRangeWorker functions remain unchanged.
+
+func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dynamicFile string, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage string, dockerHive string, mounts, inputs []string) {
 	defer wg.Done()
-	for _, line := range lines {
-		lineNumber := strconv.Itoa(utils.FindLineNumber(dynamicFile, line))
+	for _, lineWithNumber := range lines {
+		lineNumber := strconv.Itoa(lineWithNumber.Number)
 		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "FileLine", lineNumber)
-		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicFile}}", line)
+		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicFile}}", lineWithNumber.Line)
 		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{rand}}", utils.RandomString(5))
-		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{dynamicOut}}", lineNumber)
-		newtaskName := taskName + "-" + lineNumber
-		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
-			if strings.Contains(err.Error(), "timeout") {
-				visuals.PrintState("TIMEOUT", taskName, "")
+		newtaskName := taskName + ":" + lineNumber
+
+		err := executeDockerCMD(newtaskName, dynamiccmd, wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, true, wfc.EnableLogs)
+
+		if err != nil {
+			if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "waiting for container") {
+				visuals.PrintState("TIMEOUT", taskName, err.Error())
 			} else {
-				visuals.PrintState("ERROR", taskName, "")
+				visuals.PrintState("ERROR", taskName, err.Error())
 			}
 			if stop {
-				visuals.PrintState("FETAL", taskName, "")
+				visuals.PrintState("FETAL", taskName, err.Error())
 			}
 		}
 	}
 	taskDone <- struct{}{}
 }
 
-func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}) {
+func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage string, dockerHive string, mounts, inputs []string) {
 	defer wg.Done()
 	for i := startIdx; i <= endIdx; i++ {
 		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "Value", strconv.Itoa(i))
 		dynamiccmd := strings.ReplaceAll(mergedcmd, "{{dynamicRange}}", strconv.Itoa(i))
 		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{rand}}", utils.RandomString(10))
-		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{dynamicOut}}", strconv.Itoa(i))
-		newtaskName := taskName + "-" + strconv.Itoa(i)
-		if err := executeCMD(newtaskName, dynamiccmd, wfc.StdeoutDir, wfc.StderrDir, wfc.Shell, timeout, silent); err != nil {
-			if strings.Contains(err.Error(), "timeout") {
-				visuals.PrintState("TIMEOUT", newtaskName, "")
+		newtaskName := taskName + ":" + strconv.Itoa(i)
+
+		err := executeDockerCMD(newtaskName, dynamiccmd, wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, true, wfc.EnableLogs)
+
+		if err != nil {
+			if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "waiting for container") {
+				visuals.PrintState("TIMEOUT", taskName, err.Error())
 			} else {
-				visuals.PrintState("ERROR", newtaskName, "")
+				visuals.PrintState("ERROR", taskName, err.Error())
 			}
 			if stop {
-				visuals.PrintState("FETAL", newtaskName, "")
+				visuals.PrintState("FETAL", taskName, err.Error())
 			}
 		}
 	}

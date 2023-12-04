@@ -1,59 +1,11 @@
 package executors
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"os/exec"
-	"runtime"
 	"strings"
 
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 )
-
-func createCommand(command, shell string, ctx context.Context, stdoutFile, stderrFile string, displayStdout bool) (*exec.Cmd, error) {
-	var cmd *exec.Cmd
-
-	switch runtime.GOOS {
-	case "windows":
-		if shell == "" {
-			shell = "cmd"
-		}
-		cmd = exec.CommandContext(ctx, shell, "/C", command)
-	default:
-		if shell == "" {
-			shell = "sh"
-		}
-		cmd = exec.CommandContext(ctx, shell, "-c", command)
-	}
-	var stdoutWriter, stderrWriter *os.File
-	var err error
-
-	if stdoutFile != "" {
-		stdoutWriter, err = os.OpenFile(stdoutFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-		if err == nil {
-			cmd.Stdout = stdoutWriter
-		} else {
-			return nil, fmt.Errorf("error opening stdout file: %v", err)
-		}
-	}
-
-	if stderrFile != "" {
-		stderrWriter, err = os.OpenFile(stderrFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-		if err == nil {
-			cmd.Stderr = stderrWriter
-		} else {
-			return nil, fmt.Errorf("error opening stderr file: %v", err)
-		}
-	}
-
-	if displayStdout {
-		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-	}
-
-	return cmd, nil
-}
 
 func checkRequiredTasks(task *config.Task) bool {
 	if len(task.Required) != 0 && task.Parallel {
