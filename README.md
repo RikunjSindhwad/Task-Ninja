@@ -1,8 +1,24 @@
-# TaskNinja
+<h1 align="center">
+  Task-Ninja
+</h1>
+<p align="center">
+  <strong>The ultimate tasks automation framework for DevSecOps, Hackers, Bugbounty Hunters!</strong>
+</p>
+<p align="center">
+<a href="https://opensource.org/licenses/GPL"><img src="https://img.shields.io/badge/license-GPL-_red.svg"></a>
+<a href="https://goreportcard.com/badge/github.com/RikunjSindhwad/Task-Ninja"><img src="https://goreportcard.com/badge/github.com/RikunjSindhwad/Task-Ninja"></a>
+<a href="https://github.com/github.com/RikunjSindhwad/Task-Ninja/release"><img src="https://img.shields.io/github/release/RikunjSindhwad/Task-Ninja"></a>
+<a href="https://twitter.com/sindhwadrikunj"><img src="https://img.shields.io/twitter/follow/sindhwadrikunj.svg?logo=twitter"></a>
+</p>
 
-TaskNinja is a versatile and extensible task automation framework designed to simplify and streamline your workflow. Whether you're managing complex tasks, automating routine operations, or orchestrating a series of commands, TaskNinja is here to make your life easier. Task ninja takes input from basic yaml file and executes within docker containers. It has ability to take output from that container and pass it to the next container by just specifying basic yaml input. The purpose to make this tool was to automate some tasks for my personal use. 
-
-***Feel free to reachout to me for a private workflows that I have built or for custom workflow for your company needs. This can save your $$$$***
+<p align="center">
+  <a href="#Features">Features</a> •
+  <a href="#Acknowledgments">Acknowledgments</a> •
+  <a href="#Samples">Samples</a> •
+  <a href="#Installation">Installation</a> •
+  <a href="#Getting Started">Getting Started</a> •
+  <a href="https://t.me/robensive">Join Telegram</a>
+</p>
 
 ---
 ```
@@ -42,6 +58,12 @@ TaskNinja is a versatile and extensible task automation framework designed to si
          Made For 🥷  by Robensive                               Version=2.0
 ================================================================================
 ```
+
+TaskNinja is a versatile and extensible task automation framework designed to simplify and streamline your workflow. Whether you're managing complex tasks, automating routine operations, or orchestrating a series of commands, TaskNinja is here to make your life easier. Task ninja takes input from basic yaml file and executes within docker containers. It has ability to take output from that container and pass it to the next container by just specifying basic yaml input. The purpose to make this tool was to automate some tasks for my personal use. 
+
+> ***Feel free to reachout to me for a private workflows that I have built or for custom workflow for your company needs. This can save your $$$$***
+
+
 ![image](https://github.com/RikunjSindhwad/Task-Ninja/assets/54503807/e4a20fc0-af73-43f1-852d-ab895d8a6de7)
 
 
