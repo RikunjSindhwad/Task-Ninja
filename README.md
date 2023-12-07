@@ -170,7 +170,7 @@ I welcome contributions from the community! If you'd like to contribute to TaskN
 
 ## License
 
-TaskNinja is open-source and released under the [MIT License](LICENSE).
+TaskNinja is open-source and released under the [GPL License 3.0](LICENSE).
 
 ## Contact
 
