@@ -1,4 +1,4 @@
-module github.com/RikunjSindhwad/Task-Ninja/v2
+module github.com/RikunjSindhwad/Task-Ninja
 
 go 1.19
 
