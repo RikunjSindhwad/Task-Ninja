@@ -102,8 +102,11 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 
 	// Create a container
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: image,
-		Cmd:   cmd,
+		Image:        image,
+		Cmd:          cmd,
+		AttachStdout: true,
+		AttachStderr: true,
+		WorkingDir:   dockerHive,
 	}, &container.HostConfig{
 		Mounts:     []mount.Mount{resultVolume},
 		Privileged: true,
@@ -147,7 +150,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 			fmt.Print(visuals.PrintRandomColor(string(stdoutLogs), 32)) //green
 		}
 		if len(stderrLogs) > 0 {
-			fmt.Print(visuals.PrintRandomColor(string(stdoutLogs), 31)) //red
+			fmt.Print(visuals.PrintRandomColor(string(stderrLogs), 31)) //red
 		}
 
 	}
