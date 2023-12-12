@@ -104,7 +104,6 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image:      image,
 		Cmd:        cmd,
-		WorkingDir: dockerHive,
 	}, &container.HostConfig{
 		Mounts:     []mount.Mount{resultVolume},
 		Privileged: true,
