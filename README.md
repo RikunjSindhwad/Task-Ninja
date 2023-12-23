@@ -63,10 +63,6 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 
 > ***Feel free to reachout to me for a private workflows that I have built or for custom workflow for your company needs. This can save your $$$$***
 
-
-![image](https://github.com/RikunjSindhwad/Task-Ninja/assets/54503807/e4a20fc0-af73-43f1-852d-ab895d8a6de7)
-
-
 ## Features
 
 - :robot: **Task Automation**: Define and automate tasks, creating a seamless workflow for your projects.
@@ -81,6 +77,56 @@ TaskNinja is a versatile and extensible task automation framework designed to si
   
 - :jigsaw: **Extensibility**: Easily add new functionalities and plugins to TaskNinja for enhanced capabilities.
 
+
+![image](https://github.com/RikunjSindhwad/Task-Ninja/assets/54503807/e4a20fc0-af73-43f1-852d-ab895d8a6de7)
+
+## Workflow Structure
+![image](https://github.com/RikunjSindhwad/Task-Ninja/assets/54503807/de3f13c2-0bc5-4bf7-96ab-3543e631d9d2)
+
+#### Placeholders
+
+| Placeholder         | Description                                                                                                                                                                                  |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| {{hive}}            | Docker hive that is used for the task input/output and logs handlling                                                                                                                        |
+| {{hivein}}          | Task hive input folder (ex. `/hive/in`)                                                                                                                                                      |
+| {{hvieout}}         | Task hive output folder (ex. `/hive/out`)                                                                                                                                                    |
+| {{hosthive}}        | Host system path to the task hive                                                                                                                                                            |
+| {{hosthiveout}}     | Host system path to the task hive output folder                                                                                                                                              |
+| {{hosthivein}}      | Host system path to the task hive input folder                                                                                                                                               |
+| {{dynamicFile}}     | Replace filelines from dynamicFile task-config specified file                                                                                                                                |
+| {{dynamicRange}}    | Replace number from specified range in dynamicRange                                                                                                                                          |
+| {{{Taskname:file}}} | Replace specified task default output file (ex. `/hive/in/DiffTask/out/output.txt`) > Mounts must have taskname specified for this to work > Applicable in `cmds` and `dynamicFile` sections |
+| {{{Taskname:file}}} | Replace specified task hive (ex. `/hive/in/DiffTask/`) > Mounts must have taskname specified for this to work > Application in `cmds` and `dynamicFile` sections                             |
+
+#### Components (Config)
+| **Component**          | **Type**   | **Description**                                                                 |
+|--------------------|--------|-----------------------------------------------------------------------------|
+| name               | String | Workflow Name                                                               |
+| author             | String | Workflow Author name                                                        |
+| usage              | String | When input is not provided it will print this line as usage of the workflow |
+| shell              | String | Default shell to be used (`/bin/bash`,`/bin/sh`)                            |
+| defaultimage       | String | Default image to be used when no image is specified (default: alpine)       |
+| hive               | String | Folder to be used for saving results (default: hive)                        |
+| logs               | bool   | Enable logging  
+
+#### Components (tasks)
+| **Component**           | **Type** | **Description**                                                                                                                                                                                                                                |
+|-------------------------|:--------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name                    |  String  | Name for the task (must be unique for all)                                                                                                                                                                                                     |
+| image                   |  String  | Docker image to be used (optional if config has defaultimage)                                                                                                                                                                                  |
+| dockerhive [optional]   |  String  | Configured hive folder inside docker (default: /hive)                                                                                                                                                                                          |
+| cmds                    | []String | List of commands to be executed within docker                                                                                                                                                                                                  |
+| silent                  |   Bool   | When true it will show stdout and stderr in the response                                                                                                                                                                                       |
+| parallel [optional]     |   Bool   | When true it will put task in the background and move towards next task (default: false)                                                                                                                                                       |
+| required [optional]     | []String | List of task name (must be case sensitive) that must be completed before executing current                                                                                                                                                     |
+| timeout [optional]      |  String  | Timeout for the task in seconds (default 1Day)                                                                                                                                                                                                 |
+| stoponerr [optional]    |   Bool   | Stop workflow execution when any kind of error occurred during task execution                                                                                                                                                                  |
+| type [optional]         |  String  | Type of workflow (dynamic \|\| static) (default: static) > when `dynamicFile` or `dynamicRange` specified it will be automatically dynamic                                                                                                     |
+| dynamicFile [optional]  |  String  | File to be used for execution of task line by line > It will take each line of the file and perform the task execution  > `{{dynamicFile}}` plaseholder has to be used to replace with filelines                                               |
+| dynamicRange [optional] |  String  | Range to be used for executing task with specific number. (ex. 1,10) > `{{dynamicRange}}` placeholder has to be used to replace with number specified in the range                                                                             |
+| threads [optional]      |    Int   | Number of concurrent container to be used for the dynamic tasks                                                                                                                                                                                |
+| mounts [optional]       | []String | List of task names to mount as input > `{{{taskname:file}}}` can be used to replace with the mounted folder default output filepath. > `{{{taskname:folder}}}` can be used to replace with mounted folder                                      |
+| inputs [optional]       | []String | List of input files for the task. > We can supply file/folder or h
 
 ## Acknowledgments
 
@@ -162,7 +208,7 @@ IdentifiedURLS:55
 </details>
 
 
-### Installation
+## Installation
 
 TaskNinja is easy to install using the following commands:
 
