@@ -210,6 +210,9 @@ IdentifiedURLS:55
 
 ## Installation
 
+> [note]
+> Task-Ninja Requires Docker to be installed and docker service to be running please follow [this](https://docs.docker.com/engine/install/) to install.
+
 TaskNinja is easy to install using the following commands:
 
 - [ ] **Go Install**
