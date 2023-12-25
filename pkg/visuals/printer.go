@@ -29,7 +29,7 @@ func PrintState(state, taskName, msg string) {
 		gologger.Warning().Label(state).Str("TaskName", taskName).Msg(msg)
 	case "static-task: " + strings.ToLower(taskName):
 		gologger.Debug().Label(state).TimeStamp().Msg(msg)
-	case "fetal":
+	case "fatal":
 		gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!\n" + msg)
 	case "workflow-error":
 		gologger.Fatal().Label("Workflow-Error").Msgf(msg)

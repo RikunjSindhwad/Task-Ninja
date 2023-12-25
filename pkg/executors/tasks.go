@@ -26,15 +26,20 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 		dockerHive = "/hive"
 	}
 	iteration := ""
+	dockerName := ""
 	if dynamic {
 		dynamicData := strings.Split(taskName, ":")
 		taskName = dynamicData[0]
 		iteration = dynamicData[1]
+		dockerName = utils.SanitizeTaskName(taskName) + "-" + iteration
 	}
 	if timeout == 0 {
 		timeout = 24 * time.Hour
 	}
 	sanitizedTaskName := utils.SanitizeTaskName(taskName)
+	if !dynamic {
+		dockerName = sanitizedTaskName
+	}
 	hostHiveTaskDir, err := utils.GetHostHiveTaskDirectory(taskName, defaultHive)
 	if dynamic {
 		hostHiveTaskDir = filepath.Join(hostHiveTaskDir, iteration)
@@ -45,10 +50,17 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	}
 	hostHiveTaskInputDir, hostHiveTaskOutputDir := utils.GetInputOutput(hostHiveTaskDir)
 	dockerHiveTaskDir := filepath.Join(dockerHive, sanitizedTaskName)
-
-	stdoutFile, stderrfile := utils.GeterrorLogPath(hostHiveTaskDir)
-
-	utils.CopyInputFiles(inputs, hostHiveTaskInputDir)
+	var stdoutFile, stderrfile string
+	if enablelogs {
+		stdoutFile, stderrfile = utils.GeterrorLogPath(hostHiveTaskDir)
+	}
+	// It will check only length is > 0
+	if len(inputs) > 0 {
+		copyerror := utils.CopyInputFiles(inputs, hostHiveTaskInputDir)
+		if copyerror != nil {
+			return copyerror
+		}
+	}
 
 	err = utils.CopyMountFiles(mounts, hostHiveTaskInputDir, defaultHive)
 	if err != nil {
@@ -83,7 +95,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 		defer out1.Close()
 		_, err = io.Copy(io.Discard, out1)
 		if err != nil {
-			return fmt.Errorf("failed to copu Docker image pull data '%s': %v", image, err)
+			return fmt.Errorf("failed to copy Docker image pull data '%s': %v", image, err)
 		}
 
 	}
@@ -99,15 +111,31 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 		Source: hostHiveTaskDir,
 		Target: dockerHive,
 	}
+	// Check if docker container with same name exist and delete if exist
+	// **Change:** Only delete the container if it's not running
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		return fmt.Errorf("failed to list containers: %v", err)
+	}
+	for _, container := range containers {
+		if container.Names[0] == "/"+dockerName {
+			if container.State != "running" {
+				err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{Force: true})
+				if err != nil {
+					return fmt.Errorf("failed to remove container '%s': %v", dockerName, err)
+				}
+			}
+		}
+	}
 
 	// Create a container
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:      image,
-		Cmd:        cmd,
+		Image: image,
+		Cmd:   cmd,
 	}, &container.HostConfig{
 		Mounts:     []mount.Mount{resultVolume},
 		Privileged: true,
-	}, nil, nil, "")
+	}, nil, nil, dockerName)
 	if err != nil {
 		return fmt.Errorf("failed to create container for task '%s': %v", sanitizedTaskName, err)
 	}
@@ -116,7 +144,6 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("failed to start container for task '%s': %v", taskName, err)
 	}
-
 	// Wait for the container to finish
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
@@ -134,7 +161,6 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 		return fmt.Errorf("failed to get logs for task '%s': %v", taskName, err)
 	}
 	defer out.Close()
-
 	// Parse the logs to separate stdout and stderr
 	stdoutLogs, stderrLogs, err := utils.ParseDockerLogs(out)
 	if err != nil {
@@ -243,7 +269,7 @@ func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowC
 		if stop {
 
 			// gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!")
-			visuals.PrintState("FETAL", taskName, err.Error())
+			visuals.PrintState("FATAL", taskName, err.Error())
 			return err
 		}
 		return err

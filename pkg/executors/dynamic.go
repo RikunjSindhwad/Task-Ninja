@@ -24,6 +24,12 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 		dynamicFile, _ = data["dynamicFile"].(string)
 		dynamicRange, _ = data["dynamicRange"].(string)
 		dynamicFile = utils.ReplaceTaskPlaceholders(dynamicFile, defaultHive, "dynamic")
+		dynamicRange = utils.ReplaceTaskPlaceholders(dynamicRange, defaultHive, "dynamic")
+		// check if dynamicRange has filepath and file exists and if so read the file and replace the dynamicRange with the file content
+		if strings.Contains(dynamicRange, "/") {
+			dynamicRange = utils.ReadDynamicRangeFromFile(dynamicRange)
+		}
+
 		if maxThreadsYAML, ok := data["maxThreads"].(int); ok && maxThreadsYAML > 0 {
 			maxThreads = maxThreadsYAML
 		}
@@ -32,7 +38,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 	if (dynamicFile == "" && dynamicRange == "") || (dynamicFile != "" && dynamicRange != "") {
 		visuals.PrintState("ERROR", taskName, "Either 'dynamicFile' or 'dynamicRange' must be specified, but not both.")
 		if stop {
-			visuals.PrintState("FATAL", taskName, "") // Corrected the spelling here
+			visuals.PrintState("FATAL", taskName, "")
 		}
 		return nil
 	}
@@ -124,7 +130,16 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 	if strings.Contains(dynamicRange, "-") {
 		ranges, err = utils.ConvertStringListToIntList(strings.Split(dynamicRange, "-"))
 	}
+	// check if range is int or not
+	if err != nil {
+		visuals.PrintState("ERROR", taskName, "Invalid Range Format "+dynamicRange+" (expected: 1,5 || 1-5)")
+		if stop {
+			visuals.PrintState("FATAL", taskName, "")
+		}
+		return
+	}
 	counter := utils.GenerateIntegerList(ranges[0], ranges[1])
+
 	if len(counter) < maxThreads {
 		maxThreads = len(counter)
 		visuals.PrintStateDynamic("Task-Info", taskName, "Threads > Range, Reducing...", "Threads", strconv.Itoa(maxThreads))
@@ -143,11 +158,20 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 
 	// Calculate the number of values per goroutine
 	valuesPerGoroutine := (ranges[1] - ranges[0] + 1) / maxThreads
+	extraValues := (ranges[1] - ranges[0] + 1) % maxThreads
 
+	currentStartIdx := ranges[0]
 	// Create a worker pool for executing dynamic range tasks concurrently
 	for i := 0; i < maxThreads; i++ {
-		startIdx := ranges[0] + (i * valuesPerGoroutine)
-		endIdx := startIdx + valuesPerGoroutine - 1
+		extra := 0
+		if i < extraValues {
+			extra = 1
+		}
+
+		startIdx := currentStartIdx
+		endIdx := startIdx + valuesPerGoroutine + extra - 1
+		currentStartIdx = endIdx + 1
+
 		wg.Add(1)
 		go dynamicRangeWorker(taskName, mergedcmd, wfc, timeout, silent, stop, startIdx, endIdx, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
 	}
@@ -174,7 +198,7 @@ func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeo
 				visuals.PrintState("ERROR", taskName, err.Error())
 			}
 			if stop {
-				visuals.PrintState("FETAL", taskName, err.Error())
+				visuals.PrintState("FATAL", taskName, err.Error())
 			}
 		}
 	}
@@ -198,7 +222,7 @@ func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, 
 				visuals.PrintState("ERROR", taskName, err.Error())
 			}
 			if stop {
-				visuals.PrintState("FETAL", taskName, err.Error())
+				visuals.PrintState("FATAL", taskName, err.Error())
 			}
 		}
 	}

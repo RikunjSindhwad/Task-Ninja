@@ -60,39 +60,47 @@ func GetDirectorywithkeyword(input string) ([]string, error) {
 	return folders, nil
 }
 
-func CopyInputFiles(inputs []string, hostHiveTaskInputDir string) {
-	if len(inputs) > 0 {
+func CopyInputFiles(inputs []string, hostHiveTaskInputDir string) error {
 
-		for _, input := range inputs {
-			filename := ""
-			if strings.Contains(input, ",") {
-				parts := strings.Split(input, ",")
-				input = parts[0]
-				filename = parts[1]
-			}
-
-			if IsURL(input) {
-				if filename == "" {
-					DownloadFile(input, filepath.Join(hostHiveTaskInputDir, filepath.Base(input)))
-				} else {
-					DownloadFile(input, filepath.Join(hostHiveTaskInputDir, filename))
-				}
-				continue
-			}
-			// if input is folder
-			if strings.HasSuffix(input, "/") || IsFolder(input) {
-				CopyDir(input, hostHiveTaskInputDir, filepath.Base(input))
-				continue
-			}
-			// if input is file
-			if filename == "" {
-				CopyFile(input, filepath.Join(hostHiveTaskInputDir, filepath.Base(input)))
-			} else {
-				CopyFile(input, filepath.Join(hostHiveTaskInputDir, filename))
-			}
-
+	for _, input := range inputs {
+		filename := ""
+		if strings.Contains(input, ",") {
+			parts := strings.Split(input, ",")
+			input = parts[0]
+			filename = parts[1]
 		}
+		var err error
+		if IsURL(input) {
+			if filename == "" {
+				err = DownloadFile(input, filepath.Join(hostHiveTaskInputDir, filepath.Base(input)))
+			} else {
+				err = DownloadFile(input, filepath.Join(hostHiveTaskInputDir, filename))
+			}
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		// if input is folder
+		if strings.HasSuffix(input, "/") || IsFolder(input) {
+			err = CopyDir(input, hostHiveTaskInputDir, filepath.Base(input))
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		// if input is file
+		if filename == "" {
+			err = CopyFile(input, filepath.Join(hostHiveTaskInputDir, filepath.Base(input)))
+		} else {
+			err = CopyFile(input, filepath.Join(hostHiveTaskInputDir, filename))
+		}
+		if err != nil {
+			return err
+		}
+
 	}
+	return nil
 }
 
 func ParseDockerLogs(reader io.Reader) ([]byte, []byte, error) {
@@ -140,11 +148,11 @@ func GetInputOutput(source string) (string, string) {
 	out := filepath.Join(source, "out")
 	err := EnsurePathExists(in)
 	if err != nil {
-		visuals.PrintState("fetal", "", "Error creating input directory: "+err.Error())
+		visuals.PrintState("fatal", "", "Error creating input directory: "+err.Error())
 	}
 	err = EnsurePathExists(out)
 	if err != nil {
-		visuals.PrintState("fetal", "", "Error creating output directory: "+err.Error())
+		visuals.PrintState("fatal", "", "Error creating output directory: "+err.Error())
 	}
 	return in, out
 }
@@ -168,6 +176,20 @@ func GetInputOutputDocker(source string) (string, string) {
 		return filepath.Join(source, "in"), filepath.Join(source, "out")
 	}
 	return source, source
+}
+
+func ReadDynamicRangeFromFile(dynamicRange string) string {
+	lines, err := ReadLinesFromFile(dynamicRange)
+	if err != nil {
+		return ""
+	}
+	if len(lines) == 1 {
+		return lines[0]
+	}
+	if len(lines) > 2 {
+		return ""
+	}
+	return strings.Join(lines, ",")
 }
 
 func ReplaceTaskPlaceholders(command, hive, mode string) string {
