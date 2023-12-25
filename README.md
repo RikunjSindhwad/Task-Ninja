@@ -233,7 +233,7 @@ TaskNinja is easy to install using the following commands:
   ```
 ## Getting Started
 
-To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki/Getting-Started) in Wiki. It provides step-by-step instructions on installation and usage. You can find all workflows in [Task-Ninja-Workflows](https://github.com/RikunjSindhwad/Task-Ninja-Workflows)
+To get started with TaskNinja, please refer to the [Getting Started Guide](https://github.com/RikunjSindhwad/Task-Ninja/wiki) in Wiki. It provides step-by-step instructions on installation and usage. You can find all workflows in [Task-Ninja-Workflows](https://github.com/RikunjSindhwad/Task-Ninja-Workflows)
 
 ## Contributing
 
