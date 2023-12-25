@@ -7,7 +7,7 @@
 <p align="center">
 <a href="https://opensource.org/licenses/GPL"><img src="https://img.shields.io/badge/license-GPL-_red.svg"></a>
 <a href="https://goreportcard.com/badge/github.com/RikunjSindhwad/Task-Ninja"><img src="https://goreportcard.com/badge/github.com/RikunjSindhwad/Task-Ninja"></a>
-<a href="https://github.com/RikunjSindhwad/Task-Ninja/release"><img src="https://img.shields.io/github/release/RikunjSindhwad/Task-Ninja"></a>
+<a href="https://github.com/RikunjSindhwad/Task-Ninja/releases"><img src="https://img.shields.io/github/release/RikunjSindhwad/Task-Ninja"></a>
 <a href="https://twitter.com/sindhwadrikunj"><img src="https://img.shields.io/twitter/follow/sindhwadrikunj.svg?logo=twitter"></a>
 </p>
 
