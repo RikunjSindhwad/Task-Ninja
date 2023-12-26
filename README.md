@@ -17,7 +17,8 @@
   <a href="#Samples">Samples</a> •
   <a href="#Installation">Installation</a> •
   <a href="#Getting Started">Getting Started</a> •
-  <a href="https://t.me/robensive">Join Telegram</a>
+  <a href="https://t.me/robensive">Join Telegram</a> •
+  <a href="https://github.com/RikunjSindhwad/Task-Ninja-Workflows/">Workflows</a>
 </p>
 
 ---
