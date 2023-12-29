@@ -79,7 +79,8 @@ TaskNinja is a versatile and extensible task automation framework designed to si
 - :jigsaw: **Extensibility**: Easily add new functionalities and plugins to TaskNinja for enhanced capabilities.
 
 ## YouTube
-[<img src="https://i.ytimg.com/vi/Kjvv0LRHWy8/maxresdefault.jpg" width="100%">](https://www.youtube.com/watch?v=Kjvv0LRHWy8 "Introduction to Task-Ninja")
+
+[<img src="https://i.ytimg.com/vi/Kjvv0LRHWy8/maxresdefault.jpg" width="50%">](https://www.youtube.com/watch?v=Kjvv0LRHWy8 "Introduction to Task-Ninja")[<img src="https://i.ytimg.com/vi/3N7C2rNoITU/maxresdefault.jpg" width="50%">](https://www.youtube.com/watch?v=3N7C2rNoITU "Task-Ninja - Practical")
 ---
 ![Task-NinjaWC](https://github.com/RikunjSindhwad/Task-Ninja/assets/54503807/e356179f-6cb8-48d0-b6bc-1d22cfca5e5e)
 
