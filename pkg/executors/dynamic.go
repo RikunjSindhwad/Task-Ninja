@@ -56,7 +56,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 	if dynamicFile != "" {
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
+			defer wg.Done() // Added defer statement to call wg.Done() at the end of the goroutine
 			processDynamicFile(taskName, dynamicFile, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs)
 		}()
 	}
@@ -65,7 +65,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 	if dynamicRange != "" {
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
+			defer wg.Done() // Added defer statement to call wg.Done() at the end of the goroutine
 			processDynamicRange(taskName, dynamicRange, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs)
 		}()
 	}
@@ -109,7 +109,7 @@ func processDynamicFile(taskName, dynamicFile, mergedcmd string, wfc *config.Wor
 		}
 
 		wg.Add(1)
-		go dynamicWorker(taskName, mergedcmd, wfc, timeout, silent, stop, dynamicFile, linesWithNumbers, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
+		go dynamicWorker(taskName, mergedcmd, wfc, timeout, silent, stop, linesWithNumbers, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
 	}
 	taskDone <- struct{}{}
 }
@@ -131,20 +131,7 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 		ranges, err = utils.ConvertStringListToIntList(strings.Split(dynamicRange, "-"))
 	}
 	// check if range is int or not
-	if err != nil {
-		visuals.PrintState("ERROR", taskName, "Invalid Range Format "+dynamicRange+" (expected: 1,5 || 1-5)")
-		if stop {
-			visuals.PrintState("FATAL", taskName, "")
-		}
-		return
-	}
-	counter := utils.GenerateIntegerList(ranges[0], ranges[1])
 
-	if len(counter) < maxThreads {
-		maxThreads = len(counter)
-		visuals.PrintStateDynamic("Task-Info", taskName, "Threads > Range, Reducing...", "Threads", strconv.Itoa(maxThreads))
-
-	}
 	if err != nil {
 		visuals.PrintState("ERROR", taskName, "Invalid Range Format "+dynamicRange+" (expected: 1,5 || 1-5)")
 
@@ -154,6 +141,13 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 		}
 		taskDone <- struct{}{}
 		return
+	}
+	counter := utils.GenerateIntegerList(ranges[0], ranges[1])
+
+	if len(counter) < maxThreads {
+		maxThreads = len(counter)
+		visuals.PrintStateDynamic("Task-Info", taskName, "Threads > Range, Reducing...", "Threads", strconv.Itoa(maxThreads))
+
 	}
 
 	// Calculate the number of values per goroutine
@@ -180,7 +174,7 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 
 // dynamicWorker and dynamicRangeWorker functions remain unchanged.
 
-func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dynamicFile string, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage string, dockerHive string, mounts, inputs []string) {
+func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage string, dockerHive string, mounts, inputs []string) {
 	defer wg.Done()
 	for _, lineWithNumber := range lines {
 		lineNumber := strconv.Itoa(lineWithNumber.Number)
