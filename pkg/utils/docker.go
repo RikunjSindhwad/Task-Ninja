@@ -3,10 +3,44 @@ package utils
 import (
 	"context"
 	"fmt"
+	"io"
+	"time"
 
+	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/mattn/go-shellwords"
 )
+
+func PullDockerImage(image string) error {
+	isexist, err := ImageExists(image)
+	if err != nil {
+		return err
+	}
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("failed to create Docker client: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+
+	// Pull Image if not exist
+
+	if !isexist {
+		visuals.PrintState("Task-Info", "Initialize", "Pulling Docker Image: "+visuals.PrintRandomColor(image))
+		out1, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to pull Docker image '%s': %v", image, err)
+		}
+		defer out1.Close()
+		_, err = io.Copy(io.Discard, out1)
+		if err != nil {
+			return fmt.Errorf("failed to copy Docker image pull data '%s': %v", image, err)
+		}
+
+	}
+	return nil
+}
 
 func ImageExists(imageName string) (bool, error) {
 	// Initialize Docker client

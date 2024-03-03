@@ -3,7 +3,6 @@ package executors
 import (
 	"context"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -80,24 +79,11 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
 
-	isexist, err := utils.ImageExists(image)
-	if err != nil {
-		return err
-	}
-	// Pull Image if not exist
-
-	if !isexist {
-		visuals.PrintState("Task-Info", taskName, "Pulling Docker Image: "+image)
-		out1, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
+	if image != "" {
+		err = utils.PullDockerImage(image)
 		if err != nil {
-			return fmt.Errorf("failed to pull Docker image '%s': %v", image, err)
+			return err
 		}
-		defer out1.Close()
-		_, err = io.Copy(io.Discard, out1)
-		if err != nil {
-			return fmt.Errorf("failed to copy Docker image pull data '%s': %v", image, err)
-		}
-
 	}
 
 	// Docker Command
@@ -194,7 +180,16 @@ func ExecHelper(config *config.Config) {
 	taskStatus, whitelist := getTaskStatusandWhitelist(config)
 	// Create a wait group for parallel tasks
 	var wg sync.WaitGroup
-
+	// Pull Docker images
+	for _, task := range config.Tasks {
+		if task.Image != "" {
+			err := utils.PullDockerImage(task.Image)
+			if err != nil {
+				visuals.PrintState("FATAL", task.Name, err.Error())
+				return
+			}
+		}
+	}
 	// Function to execute a task
 	executeTaskFunc := func(taskName string, taskData interface{}) {
 		visuals.PrintState("START", taskName, "")
