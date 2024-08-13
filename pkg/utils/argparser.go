@@ -56,7 +56,6 @@ func UpdateConfigStruct(configStruct *config.Config, keyValueList []string) erro
 	}
 	isempty, emptyVar := checkEmptyVars(configStruct)
 	if !isempty {
-		// visuals.PrintState("FETAL")
 		gologger.Error().Label("ERROR").Str("Variables", strings.Join(emptyVar, ",")).Msg("Missing Variable Value")
 		gologger.Fatal().Label("USAGE").Msg(configStruct.WorkflowConfig.Usage)
 	}
@@ -64,8 +63,8 @@ func UpdateConfigStruct(configStruct *config.Config, keyValueList []string) erro
 	return nil
 }
 
-func checkEmptyVars(configStruct *config.Config) (bool, []string) {
-	emptyVars := make([]string, 0)
+func checkEmptyVars(configStruct *config.Config) (isEmpty bool, emptyVars []string) {
+	emptyVars = make([]string, 0)
 
 	for key, value := range configStruct.Vars {
 		if value == "" {

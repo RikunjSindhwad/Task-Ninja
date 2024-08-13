@@ -11,7 +11,7 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
 )
 
-func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}, dockerimage string, dockerHive string, mounts, inputs []string) error {
+func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}, dockerimage, dockerHive string, mounts, inputs []string) error {
 	taskName = utils.SanitizeTaskName(taskName)
 	defaultHive := wfc.DefaultHive
 	if defaultHive == "" {
@@ -174,7 +174,7 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 
 // dynamicWorker and dynamicRangeWorker functions remain unchanged.
 
-func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage string, dockerHive string, mounts, inputs []string) {
+func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, mounts, inputs []string) {
 	defer wg.Done()
 	for _, lineWithNumber := range lines {
 		lineNumber := strconv.Itoa(lineWithNumber.Number)
@@ -199,7 +199,7 @@ func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeo
 	taskDone <- struct{}{}
 }
 
-func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage string, dockerHive string, mounts, inputs []string) {
+func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, mounts, inputs []string) {
 	defer wg.Done()
 	for i := startIdx; i <= endIdx; i++ {
 		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "Value", strconv.Itoa(i))

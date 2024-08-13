@@ -8,23 +8,23 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 )
 
-func ReplacePlaceholders(config *config.Config) {
+func ReplacePlaceholders(configuration *config.Config) {
 
 	// Replace placeholders in the Tasks slice
-	for i := range config.Tasks {
+	for i := range configuration.Tasks {
 
 		// Replace placeholders in the dynamicFile within each Task
-		if config.Tasks[i].DynamicFile != "" {
-			config.Tasks[i].DynamicFile = ReplacePlaceholdersInString(config.Tasks[i].DynamicFile, config.Vars)
+		if configuration.Tasks[i].DynamicFile != "" {
+			configuration.Tasks[i].DynamicFile = ReplacePlaceholdersInString(configuration.Tasks[i].DynamicFile, configuration.Vars)
 		}
 
-		for input := range config.Tasks[i].Inputs {
-			config.Tasks[i].Inputs[input] = ReplacePlaceholdersInString(config.Tasks[i].Inputs[input], config.Vars)
+		for input := range configuration.Tasks[i].Inputs {
+			configuration.Tasks[i].Inputs[input] = ReplacePlaceholdersInString(configuration.Tasks[i].Inputs[input], configuration.Vars)
 		}
 
 		// Replace placeholders in the Cmds slice within each Task
-		for j := range config.Tasks[i].Cmds {
-			config.Tasks[i].Cmds[j] = ReplacePlaceholdersInString(config.Tasks[i].Cmds[j], config.Vars)
+		for j := range configuration.Tasks[i].Cmds {
+			configuration.Tasks[i].Cmds[j] = ReplacePlaceholdersInString(configuration.Tasks[i].Cmds[j], configuration.Vars)
 		}
 	}
 }

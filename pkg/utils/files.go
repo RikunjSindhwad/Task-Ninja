@@ -33,7 +33,7 @@ func CopyMountFiles(mounts []string, hostHiveTaskInputDir, defaultHive string) e
 			return err
 		}
 		for _, folder := range folders {
-			//delete folders
+			// delete folders
 			err = os.RemoveAll(folder)
 			if err != nil {
 				return err
@@ -103,9 +103,8 @@ func CopyInputFiles(inputs []string, hostHiveTaskInputDir string) error {
 	return nil
 }
 
-func ParseDockerLogs(reader io.Reader) ([]byte, []byte, error) {
+func ParseDockerLogs(reader io.Reader) (stdoutLogs, stderrLogs []byte, err error) {
 	const headerSize = 8 // Docker API log header is 8 bytes
-	var stdoutLogs, stderrLogs []byte
 
 	for {
 		header := make([]byte, headerSize)
@@ -136,16 +135,16 @@ func ParseDockerLogs(reader io.Reader) ([]byte, []byte, error) {
 
 func WriteLogsToFile(logs []byte, filePath string) error {
 	if filePath != "" {
-		if err := os.WriteFile(filePath, logs, 0644); err != nil {
+		if err := os.WriteFile(filePath, logs, 0o644); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func GetInputOutput(source string) (string, string) {
-	in := filepath.Join(source, "in")
-	out := filepath.Join(source, "out")
+func GetInputOutput(source string) (in, out string) {
+	in = filepath.Join(source, "in")
+	out = filepath.Join(source, "out")
 	err := EnsurePathExists(in)
 	if err != nil {
 		visuals.PrintState("fatal", "", "Error creating input directory: "+err.Error())
@@ -170,7 +169,7 @@ func IsFolderExists(path string) (bool, error) {
 	return info.IsDir(), nil
 }
 
-func GetInputOutputDocker(source string) (string, string) {
+func GetInputOutputDocker(source string) (in, out string) {
 	check, _ := IsFolderExists(source + "out")
 	if check {
 		return filepath.Join(source, "in"), filepath.Join(source, "out")
@@ -194,7 +193,8 @@ func ReadDynamicRangeFromFile(dynamicRange string) string {
 
 func ReplaceTaskPlaceholders(command, hive, mode string) string {
 	// Regex to find placeholders like {{{TaskName:Type}}}
-	re := regexp.MustCompile(`\{\{\{([^:}]+):([^}]+)\}\}\}`)
+	// re := regexp.MustCompile(`\{\{\{([^:}]+):([^}]+)\}\}\}`)
+	re := regexp.MustCompile(`\{{3}([^:}]+):([^}]+)\}{3}`)
 
 	return re.ReplaceAllStringFunc(command, func(placeholder string) string {
 		matches := re.FindStringSubmatch(placeholder)
@@ -269,9 +269,9 @@ func DownloadFile(source, destination string) error {
 	return err
 }
 
-func GeterrorLogPath(source string) (string, string) {
-	stdout := filepath.Join(source, "logs", "stdout.log")
-	stderr := filepath.Join(source, "logs", "stderr.log")
+func GeterrorLogPath(source string) (stdout, stderr string) {
+	stdout = filepath.Join(source, "logs", "stdout.log")
+	stderr = filepath.Join(source, "logs", "stderr.log")
 	err := EnsurePathExists(filepath.Join(source, "logs"))
 	if err != nil {
 		visuals.PrintState("fetal", "", "Error creating logs directory: "+err.Error())
@@ -279,9 +279,7 @@ func GeterrorLogPath(source string) (string, string) {
 	return stdout, stderr
 }
 
-func GetLogPaths(stdoutDir, stderrDir, taskName string) (string, string) {
-	stdoutFile := ""
-	stderrFile := ""
+func GetLogPaths(stdoutDir, stderrDir, taskName string) (stdoutFile, stderrFile string) {
 	if stdoutDir != "" {
 		stdouterr := EnsurePathExists(stdoutDir)
 		if stdouterr != nil {
@@ -303,7 +301,7 @@ func EnsurePathExists(path string) error {
 	// Check if the path already exists.
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		// Path does not exist, create it.
-		err := os.MkdirAll(path, 0755)
+		err := os.MkdirAll(path, 0o755)
 		if err != nil {
 			return err
 		}
@@ -359,21 +357,17 @@ func ReadLinesFromFile(filePath string) ([]string, error) {
 func GetHostHiveTaskDirectory(taskName, defaultHive string) (string, error) {
 	sanitizedTaskName := SanitizeTaskName(taskName)
 
-	var err error
 	hostHiveDir := defaultHive
-
-	if !strings.HasPrefix("/", defaultHive) {
-		hostHiveDir, err = filepath.Abs(filepath.Join(".", defaultHive))
-	} else {
-		hostHiveDir, err = filepath.Abs(defaultHive)
-	}
-
-	if err != nil {
-		return "", fmt.Errorf("failed to get absolute path for Hive directory: %v", err)
+	if !filepath.IsAbs(defaultHive) {
+		absPath, err := filepath.Abs(filepath.Join(".", defaultHive))
+		if err != nil {
+			return "", fmt.Errorf("failed to get absolute path for Hive directory: %v", err)
+		}
+		hostHiveDir = absPath
 	}
 
 	hostHiveTaskDir := filepath.Join(hostHiveDir, sanitizedTaskName)
-	if err := os.MkdirAll(hostHiveTaskDir, 0755); err != nil {
+	if err := os.MkdirAll(hostHiveTaskDir, 0o755); err != nil {
 		return "", fmt.Errorf("failed to create host hive directory for task '%s': %v", sanitizedTaskName, err)
 	}
 
@@ -397,7 +391,7 @@ func CopyDir(src, dst, taskName string) error {
 	}
 
 	// Create the destination directory
-	err := os.MkdirAll(dst, 0755)
+	err := os.MkdirAll(dst, 0o755)
 	if err != nil {
 		return err
 	}

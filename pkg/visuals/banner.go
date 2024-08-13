@@ -11,7 +11,7 @@ import (
 )
 
 func PrintBanner() {
-	Version := "2.0.3"
+	Version := "2.0.4"
 
 	banner := (`
                                                         :=*#%@@@@#                        

@@ -28,11 +28,11 @@ func checkRequirements(taskData *config.Task, whitelist []string) {
 	}
 	taskData.Required = checkListContainsUnknwn(taskData.Required, whitelist)
 }
-func getTaskStatusandWhitelist(config *config.Config) (map[string]bool, []string) {
-	taskStatus := make(map[string]bool)
-	whitelist := []string{}
-	for _, task := range config.Tasks {
-		taskName := task.Name
+func getTaskStatusandWhitelist(configuration *config.Config) (taskStatus map[string]bool, whitelist []string) {
+	taskStatus = make(map[string]bool)
+	whitelist = []string{}
+	for i := range configuration.Tasks {
+		taskName := configuration.Tasks[i].Name
 		taskStatus[taskName] = false
 		whitelist = append(whitelist, taskName)
 	}
@@ -57,7 +57,7 @@ func checkListContainsSame(list []string, value string) bool {
 	return false
 }
 
-func checkListContainsUnknwn(requiredList []string, whitelist []string) []string {
+func checkListContainsUnknwn(requiredList, whitelist []string) []string {
 	updatedRequiredList := []string{}
 	for _, item := range requiredList {
 		if checkListContainsSame(whitelist, item) {

@@ -4,8 +4,9 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 )
 
-func GetTaskDataWithName(taskName string, config *config.Config) map[string]interface{} {
-	for _, task := range config.Tasks {
+func GetTaskDataWithName(taskName string, configuration *config.Config) map[string]interface{} {
+	for i := range configuration.Tasks {
+		task := &configuration.Tasks[i]
 		if task.Name == taskName {
 			taskData := map[string]interface{}{
 				"cmds":         task.Cmds,

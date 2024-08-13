@@ -103,10 +103,11 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	if err != nil {
 		return fmt.Errorf("failed to list containers: %v", err)
 	}
-	for _, container := range containers {
-		if container.Names[0] == "/"+dockerName {
-			if container.State != "running" {
-				err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{Force: true})
+	for i := range containers {
+		containerObj := &containers[i]
+		if containerObj.Names[0] == "/"+dockerName {
+			if containerObj.State != "running" {
+				err := cli.ContainerRemove(ctx, containerObj.ID, types.ContainerRemoveOptions{Force: true})
 				if err != nil {
 					return fmt.Errorf("failed to remove container '%s': %v", dockerName, err)
 				}
@@ -156,10 +157,10 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	// Optionally display stdout
 	if displayStdout {
 		if len(stdoutLogs) > 0 {
-			fmt.Print(visuals.PrintRandomColor(string(stdoutLogs), 32)) //green
+			fmt.Print(visuals.PrintRandomColor(string(stdoutLogs), 32)) // green
 		}
 		if len(stderrLogs) > 0 {
-			fmt.Print(visuals.PrintRandomColor(string(stderrLogs), 31)) //red
+			fmt.Print(visuals.PrintRandomColor(string(stderrLogs), 31)) // red
 		}
 
 	}
@@ -175,13 +176,14 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	return nil
 }
 
-func ExecHelper(config *config.Config) {
+func ExecHelper(configuration *config.Config) {
 	// Tasks are false by default
-	taskStatus, whitelist := getTaskStatusandWhitelist(config)
+	taskStatus, whitelist := getTaskStatusandWhitelist(configuration)
 	// Create a wait group for parallel tasks
 	var wg sync.WaitGroup
 	// Pull Docker images
-	for _, task := range config.Tasks {
+	for i := range configuration.Tasks {
+		task := &configuration.Tasks[i]
 		if task.Image != "" {
 			err := utils.PullDockerImage(task.Image)
 			if err != nil {
@@ -190,24 +192,24 @@ func ExecHelper(config *config.Config) {
 			}
 		}
 	}
+
 	// Function to execute a task
 	executeTaskFunc := func(taskName string, taskData interface{}) {
 		visuals.PrintState("START", taskName, "")
-		err := executeTask(config, taskName, taskData)
+		err := executeTask(configuration, taskName, taskData)
 		if err == nil {
 			visuals.PrintState("SUCCESS", taskName, "")
 			taskStatus[taskName] = true
 		}
 	}
 
-	// Execute tasks in parallel
-	for _, taskData := range config.Tasks {
-		checkRequirements(&taskData, whitelist)
+	for i := range configuration.Tasks {
+		taskData := &configuration.Tasks[i]
+		checkRequirements(taskData, whitelist)
 
-		// **Change:** Wait for required tasks to finish before executing the current task
 		for _, requiredTask := range taskData.Required {
 			for !taskStatus[requiredTask] {
-				// Wait for 1 second before checking again
+
 				time.Sleep(time.Second)
 			}
 		}
@@ -218,7 +220,7 @@ func ExecHelper(config *config.Config) {
 			go func(name string, data interface{}) {
 				executeTaskFunc(name, data)
 				wg.Done()
-			}(taskData.Name, GetTaskDataWithName(taskData.Name, config))
+			}(taskData.Name, GetTaskDataWithName(taskData.Name, configuration))
 		} else {
 			// Function to execute tasks with dependencies
 			executeWithDependencies := func() {
@@ -233,7 +235,7 @@ func ExecHelper(config *config.Config) {
 
 				// Execute the current task if all requirements are met
 				if allRequirementsMet {
-					executeTaskFunc(taskData.Name, GetTaskDataWithName(taskData.Name, config))
+					executeTaskFunc(taskData.Name, GetTaskDataWithName(taskData.Name, configuration))
 				}
 			}
 
@@ -263,7 +265,6 @@ func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowC
 		}
 		if stop {
 
-			// gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!")
 			visuals.PrintState("FATAL", taskName, err.Error())
 			return err
 		}
@@ -272,23 +273,23 @@ func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowC
 	return nil
 }
 
-func executeTask(config *config.Config, taskName string, taskData interface{}) error {
+func executeTask(configuration *config.Config, taskName string, taskData interface{}) error {
 	commands := utils.GetInterfaceVal(taskData, "cmds").([]string)
 	timeout := utils.GetTimeout(taskData)
 	silent := utils.GetInterfaceVal(taskData, "silent").(bool)
 	silent = !silent
 	stop := utils.GetInterfaceVal(taskData, "stop").(bool)
-	wfc := &config.WorkflowConfig
+	wfc := &configuration.WorkflowConfig
 	dockerImage := utils.GetInterfaceVal(taskData, "image").(string)
 	dockerhive := utils.GetInterfaceVal(taskData, "dockerHive").(string)
 	mounts := utils.GetInterfaceVal(taskData, "inputMounts").([]string)
 	inputs := utils.GetInterfaceVal(taskData, "inputs").([]string)
 	// default docker image from workflow config
 	if dockerImage == "" {
-		dockerImage = config.WorkflowConfig.DefaultDockerimage
+		dockerImage = configuration.WorkflowConfig.DefaultDockerimage
 	}
 	taskType := utils.GetInterfaceVal(taskData, "type").(string)
-	if strings.ToLower(taskType) == "dynamic" || taskData.(map[string]interface{})["dynamicFile"] != "" || taskData.(map[string]interface{})["dynamicRange"] != "" {
+	if strings.EqualFold(taskType, "dynamic") || taskData.(map[string]interface{})["dynamicFile"] != "" || taskData.(map[string]interface{})["dynamicRange"] != "" {
 		err := executeDynamicTask(taskName, commands, wfc, timeout, silent, stop, taskData, dockerImage, dockerhive, mounts, inputs)
 		if err != nil {
 			return err

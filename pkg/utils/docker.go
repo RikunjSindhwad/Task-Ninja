@@ -64,7 +64,7 @@ func ImageExists(imageName string) (bool, error) {
 	return true, nil
 }
 
-func InspectImageEntrypoint(imageName string, defaultCmd string) ([]string, error) {
+func InspectImageEntrypoint(imageName, defaultCmd string) ([]string, error) {
 	// Initialize Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
