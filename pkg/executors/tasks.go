@@ -17,6 +17,14 @@ import (
 	"github.com/docker/docker/client"
 )
 
+var (
+	cli *client.Client
+)
+
+func init() {
+	cli = utils.GetDockerClient()
+}
+
 func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, mounts, inputs []string, timeout time.Duration, displayStdout, dynamic, enablelogs bool) error {
 	if defaultHive == "" {
 		defaultHive = "hive"
@@ -73,21 +81,15 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Initialize Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return fmt.Errorf("failed to create docker client: %v", err)
-	}
-
 	if image != "" {
-		err = utils.PullDockerImage(image)
+		err = utils.PullDockerImage(cli, image)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Docker Command
-	cmd, err := utils.InspectImageEntrypoint(image, command)
+	cmd, err := utils.InspectImageEntrypoint(cli, image, command)
 	if err != nil {
 		return fmt.Errorf("error inspecting Docker image entrypoint: %v", err)
 	}
@@ -185,7 +187,7 @@ func ExecHelper(configuration *config.Config) {
 	for i := range configuration.Tasks {
 		task := &configuration.Tasks[i]
 		if task.Image != "" {
-			err := utils.PullDockerImage(task.Image)
+			err := utils.PullDockerImage(cli, task.Image)
 			if err != nil {
 				visuals.PrintState("FATAL", task.Name, err.Error())
 				return

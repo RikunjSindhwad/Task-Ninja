@@ -12,14 +12,18 @@ import (
 	"github.com/mattn/go-shellwords"
 )
 
-func PullDockerImage(image string) error {
-	isexist, err := ImageExists(image)
-	if err != nil {
-		return err
-	}
+func GetDockerClient() *client.Client {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("failed to create Docker client: %v", err)
+		visuals.PrintState("FATAL", "Docker", "Failed to create Docker client")
+	}
+	return cli
+}
+
+func PullDockerImage(cli *client.Client, image string) error {
+	isexist, err := ImageExists(cli, image)
+	if err != nil {
+		return err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 	defer cancel()
@@ -42,15 +46,11 @@ func PullDockerImage(image string) error {
 	return nil
 }
 
-func ImageExists(imageName string) (bool, error) {
+func ImageExists(cli *client.Client, imageName string) (bool, error) {
 	// Initialize Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return false, fmt.Errorf("failed to create Docker client: %v", err)
-	}
 
 	// Check if the image exists
-	_, _, err = cli.ImageInspectWithRaw(context.Background(), imageName)
+	_, _, err := cli.ImageInspectWithRaw(context.Background(), imageName)
 	if err != nil {
 		if client.IsErrNotFound(err) {
 			// Image not found
@@ -64,12 +64,7 @@ func ImageExists(imageName string) (bool, error) {
 	return true, nil
 }
 
-func InspectImageEntrypoint(imageName, defaultCmd string) ([]string, error) {
-	// Initialize Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Docker client: %v", err)
-	}
+func InspectImageEntrypoint(cli *client.Client, imageName, defaultCmd string) ([]string, error) {
 
 	// Inspect the Docker image
 	imgInspect, _, err := cli.ImageInspectWithRaw(context.Background(), imageName)
