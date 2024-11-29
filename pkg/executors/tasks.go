@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/utils"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"

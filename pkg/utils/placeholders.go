@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/config"
 )
 
 func ReplacePlaceholders(configuration *config.Config) {

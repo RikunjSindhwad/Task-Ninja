@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 )
 
 func CopyMountFiles(mounts []string, hostHiveTaskInputDir, defaultHive string) error {

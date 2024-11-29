@@ -3,8 +3,8 @@ package utils
 import (
 	"strings"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"

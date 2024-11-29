@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"

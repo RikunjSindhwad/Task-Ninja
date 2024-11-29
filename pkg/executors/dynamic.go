@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/utils"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 )
 
 func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}, dockerimage, dockerHive string, mounts, inputs []string) error {

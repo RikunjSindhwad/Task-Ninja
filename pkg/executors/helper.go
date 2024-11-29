@@ -3,8 +3,8 @@ package executors
 import (
 	"strings"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 )
 
 func checkRequiredTasks(task *config.Task) bool {

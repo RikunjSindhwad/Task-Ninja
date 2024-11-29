@@ -3,10 +3,10 @@ package main
 import (
 	"time"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/executors"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/config"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/executors"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/utils"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 )
 
 func main() {

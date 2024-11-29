@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
+	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 	"gopkg.in/yaml.v2"
 )
 
