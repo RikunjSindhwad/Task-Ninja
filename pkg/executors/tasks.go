@@ -11,7 +11,6 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/config"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/utils"
 	"github.com/RikunjSindhwad/Task-Ninja/pkg/visuals"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
@@ -101,7 +100,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	}
 	// Check if docker container with same name exist and delete if exist
 	// **Change:** Only delete the container if it's not running
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	containers, err := cli.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
 		return fmt.Errorf("failed to list containers: %v", err)
 	}
@@ -109,7 +108,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 		containerObj := &containers[i]
 		if containerObj.Names[0] == "/"+dockerName {
 			if containerObj.State != "running" {
-				err := cli.ContainerRemove(ctx, containerObj.ID, types.ContainerRemoveOptions{Force: true})
+				err := cli.ContainerRemove(ctx, containerObj.ID, container.RemoveOptions{Force: true})
 				if err != nil {
 					return fmt.Errorf("failed to remove container '%s': %v", dockerName, err)
 				}
@@ -130,7 +129,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	}
 
 	// Start the container
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return fmt.Errorf("failed to start container for task '%s': %v", taskName, err)
 	}
 	// Wait for the container to finish
@@ -145,7 +144,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	}
 
 	// Get the logs from the container
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+	out, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		return fmt.Errorf("failed to get logs for task '%s': %v", taskName, err)
 	}
@@ -171,7 +170,7 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	}
 
 	// Remove the container once it's finished
-	if err := cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
 		return fmt.Errorf("failed to remove container for task '%s': %v", taskName, err)
 	}
 
