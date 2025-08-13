@@ -1,0 +1,23 @@
+# Binaries and build output
+build/
+
+# Ignore Makefile itself
+Makefile
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Go related
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*~
