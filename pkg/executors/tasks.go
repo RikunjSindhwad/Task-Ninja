@@ -24,7 +24,7 @@ func init() {
 	cli = utils.GetDockerClient()
 }
 
-func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, mounts, inputs []string, timeout time.Duration, displayStdout, dynamic, enablelogs bool) error {
+func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, mounts, inputs []string, timeout time.Duration, displayStdout, dynamic, enablelogs, useHostNetwork bool) error {
 	if defaultHive == "" {
 		defaultHive = "hive"
 	}
@@ -117,13 +117,20 @@ func executeDockerCMD(taskName, command, defaultHive, dockerHive, image string, 
 	}
 
 	// Create a container
+	hostConfig := &container.HostConfig{
+		Mounts:     []mount.Mount{resultVolume},
+		Privileged: true,
+	}
+
+	// Set network mode to host if UseHostNetwork is true
+	if useHostNetwork {
+		hostConfig.NetworkMode = "host"
+	}
+
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: image,
 		Cmd:   cmd,
-	}, &container.HostConfig{
-		Mounts:     []mount.Mount{resultVolume},
-		Privileged: true,
-	}, nil, nil, dockerName)
+	}, hostConfig, nil, nil, dockerName)
 	if err != nil {
 		return fmt.Errorf("failed to create container for task '%s': %v", sanitizedTaskName, err)
 	}
@@ -252,11 +259,11 @@ func ExecHelper(configuration *config.Config) {
 	wg.Wait()
 }
 
-func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dockerimage, dockerHive string, mounts, inputs []string) error {
+func executeSingleTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, dockerimage, dockerHive string, mounts, inputs []string, useHostNetwork bool) error {
 	visuals.PrintState("Task-Info", taskName, "Task is Static")
 	visuals.PrintState("Static-Task: "+taskName, taskName, "Executing Task")
 
-	err := executeDockerCMD(taskName, strings.Join(commands, " && "), wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, false, wfc.EnableLogs)
+	err := executeDockerCMD(taskName, strings.Join(commands, " && "), wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, false, wfc.EnableLogs, useHostNetwork)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "waiting for container") {
@@ -285,19 +292,20 @@ func executeTask(configuration *config.Config, taskName string, taskData interfa
 	dockerhive := utils.GetInterfaceVal(taskData, "dockerHive").(string)
 	mounts := utils.GetInterfaceVal(taskData, "inputMounts").([]string)
 	inputs := utils.GetInterfaceVal(taskData, "inputs").([]string)
+	useHostNetwork := utils.GetInterfaceVal(taskData, "useHostNetwork").(bool)
 	// default docker image from workflow config
 	if dockerImage == "" {
 		dockerImage = configuration.WorkflowConfig.DefaultDockerimage
 	}
 	taskType := utils.GetInterfaceVal(taskData, "type").(string)
 	if strings.EqualFold(taskType, "dynamic") || taskData.(map[string]interface{})["dynamicFile"] != "" || taskData.(map[string]interface{})["dynamicRange"] != "" {
-		err := executeDynamicTask(taskName, commands, wfc, timeout, silent, stop, taskData, dockerImage, dockerhive, mounts, inputs)
+		err := executeDynamicTask(taskName, commands, wfc, timeout, silent, stop, taskData, dockerImage, dockerhive, mounts, inputs, useHostNetwork)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
-	err := executeSingleTask(taskName, commands, wfc, timeout, silent, stop, dockerImage, dockerhive, mounts, inputs)
+	err := executeSingleTask(taskName, commands, wfc, timeout, silent, stop, dockerImage, dockerhive, mounts, inputs, useHostNetwork)
 	if err != nil {
 		return err
 	}

@@ -20,15 +20,15 @@ func PrintState(state, taskName, msg string) {
 	case "timeout":
 		gologger.Error().Label(state).Str("TaskName", taskName).Msg("Timeout occurred while executing task")
 	case "error":
-		gologger.Error().Label(state).Str("TaskName", taskName).TimeStamp().Msgf(msg)
+		gologger.Error().Label(state).Str("TaskName", taskName).TimeStamp().Msgf("%s", msg)
 	case "task-info":
 		gologger.Warning().Label(state).Str("TaskName", taskName).Msg(msg)
 	case "static-task: " + strings.ToLower(taskName):
 		gologger.Debug().Label(state).TimeStamp().Msg(msg)
 	case "fatal":
-		gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!\n" + msg)
+		gologger.Fatal().TimeStamp().Str("TaskName", taskName).Msgf("Stop On Error!\n%s", msg)
 	case "workflow-error":
-		gologger.Fatal().Label("Workflow-Error").Msgf(msg)
+		gologger.Fatal().Label("Workflow-Error").Msgf("%s", msg)
 
 	}
 
@@ -38,7 +38,7 @@ func PrintStateDynamic(state, taskName, msg, str, value string) {
 
 	switch strings.ToLower(state) {
 	case "dynamic-task: " + strings.ToLower(taskName):
-		gologger.Debug().TimeStamp().Label(state).Str(str, value).Msgf(msg)
+		gologger.Debug().TimeStamp().Label(state).Str(str, value).Msgf("%s", msg)
 	case "task-info":
 		gologger.Warning().Label(state).Str(str, value).Msg(msg)
 	}

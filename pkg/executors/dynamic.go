@@ -11,7 +11,7 @@ import (
 	"github.com/RikunjSindhwad/Task-Ninja/v2/pkg/visuals"
 )
 
-func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}, dockerimage, dockerHive string, mounts, inputs []string) error {
+func executeDynamicTask(taskName string, commands []string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, taskData interface{}, dockerimage, dockerHive string, mounts, inputs []string, useHostNetwork bool) error {
 	taskName = utils.SanitizeTaskName(taskName)
 	defaultHive := wfc.DefaultHive
 	if defaultHive == "" {
@@ -57,7 +57,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 		wg.Add(1)
 		go func() {
 			defer wg.Done() // Added defer statement to call wg.Done() at the end of the goroutine
-			processDynamicFile(taskName, dynamicFile, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs)
+			processDynamicFile(taskName, dynamicFile, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs, useHostNetwork)
 		}()
 	}
 
@@ -66,7 +66,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 		wg.Add(1)
 		go func() {
 			defer wg.Done() // Added defer statement to call wg.Done() at the end of the goroutine
-			processDynamicRange(taskName, dynamicRange, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs)
+			processDynamicRange(taskName, dynamicRange, mergedcmd, wfc, timeout, silent, stop, &wg, taskDone, dockerimage, dockerHive, maxThreads, mounts, inputs, useHostNetwork)
 		}()
 	}
 
@@ -84,7 +84,7 @@ func executeDynamicTask(taskName string, commands []string, wfc *config.Workflow
 }
 
 // Separated the dynamic file processing into its own function for clarity.
-func processDynamicFile(taskName, dynamicFile, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, maxThreads int, mounts, inputs []string) {
+func processDynamicFile(taskName, dynamicFile, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, maxThreads int, mounts, inputs []string, useHostNetwork bool) {
 	lines, err := utils.ReadLinesFromFile(dynamicFile)
 	if err != nil {
 		// ... error handling
@@ -109,7 +109,7 @@ func processDynamicFile(taskName, dynamicFile, mergedcmd string, wfc *config.Wor
 		}
 
 		wg.Add(1)
-		go dynamicWorker(taskName, mergedcmd, wfc, timeout, silent, stop, linesWithNumbers, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
+		go dynamicWorker(taskName, mergedcmd, wfc, timeout, silent, stop, linesWithNumbers, wg, taskDone, dockerimage, dockerHive, mounts, inputs, useHostNetwork)
 	}
 	taskDone <- struct{}{}
 }
@@ -120,7 +120,7 @@ type LineWithNumber struct {
 }
 
 // Separated the dynamic range processing into its own function for clarity.
-func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, maxThreads int, mounts, inputs []string) {
+func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, maxThreads int, mounts, inputs []string, useHostNetwork bool) {
 	var ranges []int
 	var err error
 	// if dynamicRange contains more then 2 values
@@ -167,14 +167,14 @@ func processDynamicRange(taskName, dynamicRange, mergedcmd string, wfc *config.W
 		currentStartIdx = endIdx + 1
 
 		wg.Add(1)
-		go dynamicRangeWorker(taskName, mergedcmd, wfc, timeout, silent, stop, startIdx, endIdx, wg, taskDone, dockerimage, dockerHive, mounts, inputs)
+		go dynamicRangeWorker(taskName, mergedcmd, wfc, timeout, silent, stop, startIdx, endIdx, wg, taskDone, dockerimage, dockerHive, mounts, inputs, useHostNetwork)
 	}
 	taskDone <- struct{}{}
 }
 
 // dynamicWorker and dynamicRangeWorker functions remain unchanged.
 
-func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, mounts, inputs []string) {
+func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, lines []LineWithNumber, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, mounts, inputs []string, useHostNetwork bool) {
 	defer wg.Done()
 	for _, lineWithNumber := range lines {
 		lineNumber := strconv.Itoa(lineWithNumber.Number)
@@ -183,7 +183,7 @@ func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeo
 		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{rand}}", utils.RandomString(5))
 		newtaskName := taskName + ":" + lineNumber
 
-		err := executeDockerCMD(newtaskName, dynamiccmd, wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, true, wfc.EnableLogs)
+		err := executeDockerCMD(newtaskName, dynamiccmd, wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, true, wfc.EnableLogs, useHostNetwork)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "waiting for container") {
@@ -199,7 +199,7 @@ func dynamicWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeo
 	taskDone <- struct{}{}
 }
 
-func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, mounts, inputs []string) {
+func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, timeout time.Duration, silent, stop bool, startIdx, endIdx int, wg *sync.WaitGroup, taskDone chan<- struct{}, dockerimage, dockerHive string, mounts, inputs []string, useHostNetwork bool) {
 	defer wg.Done()
 	for i := startIdx; i <= endIdx; i++ {
 		visuals.PrintStateDynamic("Dynamic-Task: "+taskName, taskName, "Running Tasks Parallel", "Value", strconv.Itoa(i))
@@ -207,7 +207,7 @@ func dynamicRangeWorker(taskName, mergedcmd string, wfc *config.WorkflowConfig, 
 		dynamiccmd = strings.ReplaceAll(dynamiccmd, "{{rand}}", utils.RandomString(10))
 		newtaskName := taskName + ":" + strconv.Itoa(i)
 
-		err := executeDockerCMD(newtaskName, dynamiccmd, wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, true, wfc.EnableLogs)
+		err := executeDockerCMD(newtaskName, dynamiccmd, wfc.DefaultHive, dockerHive, dockerimage, mounts, inputs, timeout, silent, true, wfc.EnableLogs, useHostNetwork)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "waiting for container") {
